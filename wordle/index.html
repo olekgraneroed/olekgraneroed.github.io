@@ -1,0 +1,699 @@
+<!doctype html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ordle – norsk Wordle</title>
+<meta name="description" content="Norsk Wordle med valgfritt antall bokstaver og forsøk – spill alene, med venner på samme enhet eller online.">
+<style>
+:root{
+  --bg:#f7f7f5; --panel:#ffffff; --text:#1d1d1f; --muted:#6b6b70; --line:#d4d4d8;
+  --key:#dcdce0; --key-text:#1d1d1f; --tile-border:#c8c8cd; --tile-filled:#8a8a90;
+  --correct:#3a9d5d; --present:#c9a227; --absent:#7a7a80; --accent:#2f6fde; --danger:#c0392b;
+  --shadow:0 6px 30px rgba(0,0,0,.12);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121214; --panel:#1c1c1f; --text:#f2f2f3; --muted:#9a9aa2; --line:#33333a;
+    --key:#3a3a40; --key-text:#f2f2f3; --tile-border:#3a3a40; --tile-filled:#6a6a72;
+    --correct:#3f9e5f; --present:#b8962a; --absent:#3a3a3f; --accent:#5b8ff0; --danger:#e05a4a;
+    --shadow:0 6px 30px rgba(0,0,0,.5);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121214; --panel:#1c1c1f; --text:#f2f2f3; --muted:#9a9aa2; --line:#33333a;
+  --key:#3a3a40; --key-text:#f2f2f3; --tile-border:#3a3a40; --tile-filled:#6a6a72;
+  --correct:#3f9e5f; --present:#b8962a; --absent:#3a3a3f; --accent:#5b8ff0; --danger:#e05a4a;
+  --shadow:0 6px 30px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer}
+input{font:inherit;color:var(--text)}
+.app{display:flex;flex-direction:column;height:100dvh;max-width:760px;margin:0 auto}
+header{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid var(--line);flex:none}
+header h1{margin:0;font-size:1.5rem;letter-spacing:.06em;font-weight:800}
+header h1 span{color:var(--correct)}
+.iconbtn{background:none;border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:.95rem}
+.hdr-left,.hdr-right{display:flex;gap:6px;min-width:90px}
+.hdr-right{justify-content:flex-end}
+.screen{display:none;flex:1;min-height:0}
+.screen.on{display:flex}
+
+/* Meny */
+#menu{flex-direction:column;overflow-y:auto;padding:16px;gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.card h2{margin:0 0 10px;font-size:1.05rem}
+.card p{margin:0 0 10px;color:var(--muted);font-size:.92rem;line-height:1.4}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 0}
+.row label{font-size:.95rem}
+.stepper{display:flex;align-items:center;gap:6px}
+.stepper button{width:36px;height:36px;border-radius:8px;border:1px solid var(--line);background:var(--bg);font-size:1.2rem}
+.stepper output{min-width:32px;text-align:center;font-weight:700;font-size:1.1rem}
+.btn{border:none;border-radius:10px;padding:11px 16px;background:var(--accent);color:#fff;font-weight:650;font-size:1rem}
+.btn.sec{background:var(--bg);color:var(--text);border:1px solid var(--line)}
+.btn.green{background:var(--correct)}
+.btn:disabled{opacity:.5;cursor:default}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.btns .btn{flex:1 1 140px}
+.txt{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);font-size:1rem}
+.plist{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.plist .pl{display:flex;gap:6px}
+.plist .pl button{flex:none;width:42px;border-radius:10px;border:1px solid var(--line);background:var(--bg)}
+.small{font-size:.85rem;color:var(--muted)}
+.switch{display:flex;align-items:center;gap:8px}
+.switch input{width:20px;height:20px}
+.linkbox{display:flex;gap:6px;margin-top:10px}
+.linkbox input{flex:1;min-width:0}
+
+/* Spill */
+#game{flex-direction:column}
+.status{text-align:center;padding:8px 16px 2px;font-weight:650;min-height:32px;flex:none}
+.status .sub{display:block;font-weight:400;font-size:.85rem;color:var(--muted)}
+.minis{display:flex;gap:10px;overflow-x:auto;padding:6px 16px;flex:none;justify-content:center;flex-wrap:wrap}
+.minis:empty{display:none}
+.mini{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:.72rem;padding:4px 6px;border-radius:8px;border:1px solid transparent}
+.mini.active{border-color:var(--accent)}
+.mini .nm{max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.mini .g{display:grid;gap:2px}
+.mini .c{width:9px;height:9px;border-radius:2px;background:transparent;border:1px solid var(--tile-border)}
+.mini .c.correct{background:var(--correct);border-color:var(--correct)}
+.mini .c.present{background:var(--present);border-color:var(--present)}
+.mini .c.absent{background:var(--absent);border-color:var(--absent)}
+.mini .st{color:var(--muted)}
+.boardwrap{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:6px 16px}
+.board{display:grid;gap:5px;--ts:56px}
+.brow{display:grid;grid-template-columns:repeat(var(--n),var(--ts));gap:5px}
+.brow.shake{animation:shake .45s}
+.tile{width:var(--ts);height:var(--ts);border:2px solid var(--tile-border);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:calc(var(--ts)*.5);text-transform:uppercase;border-radius:4px;user-select:none}
+.tile.filled{border-color:var(--tile-filled);animation:pop .1s}
+.tile.correct,.tile.present,.tile.absent{color:#fff;border-color:transparent}
+.tile.correct{background:var(--correct)}
+.tile.present{background:var(--present)}
+.tile.absent{background:var(--absent)}
+.tile.reveal{animation:flip .5s ease both}
+.brow.win .tile{animation:bounce .6s ease both}
+@keyframes pop{50%{transform:scale(1.08)}}
+@keyframes flip{0%{transform:rotateX(0);background:transparent;color:var(--text);border-color:var(--tile-filled)}49%{background:transparent;color:var(--text);border-color:var(--tile-filled)}50%{transform:rotateX(90deg)}100%{transform:rotateX(0)}}
+@keyframes shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+@keyframes bounce{30%{transform:translateY(-14px)}60%{transform:translateY(2px)}}
+
+.kb{padding:6px 6px calc(10px + env(safe-area-inset-bottom));flex:none;display:flex;flex-direction:column;gap:6px;user-select:none}
+.kr{display:flex;gap:4px;justify-content:center}
+.k{flex:1;max-width:46px;height:54px;border:none;border-radius:6px;background:var(--key);color:var(--key-text);font-weight:700;font-size:1rem;text-transform:uppercase;padding:0}
+.k.wide{max-width:72px;flex:1.5;font-size:.72rem}
+.k.correct{background:var(--correct);color:#fff}
+.k.present{background:var(--present);color:#fff}
+.k.absent{background:var(--absent);color:#fff;opacity:.85}
+
+/* Lobby */
+#lobby{flex-direction:column;overflow-y:auto;padding:16px;gap:14px}
+.code{font-size:2.2rem;font-weight:800;letter-spacing:.25em;text-align:center;font-family:ui-monospace,monospace}
+.players li{padding:6px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between}
+.players{list-style:none;margin:0;padding:0}
+
+/* Toast og modal */
+.toasts{position:fixed;top:30%;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:6px;z-index:50;pointer-events:none}
+.toast{background:var(--text);color:var(--bg);padding:10px 16px;border-radius:8px;font-weight:650;box-shadow:var(--shadow);animation:fade 2.2s forwards;text-align:center}
+@keyframes fade{0%{opacity:0;transform:translateY(-6px)}8%{opacity:1;transform:none}85%{opacity:1}100%{opacity:0}}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;padding:16px;z-index:40}
+.modal.on{display:flex}
+.modal .box{background:var(--panel);border-radius:16px;padding:20px;max-width:420px;width:100%;box-shadow:var(--shadow);max-height:90dvh;overflow-y:auto}
+.modal h2{margin:0 0 10px}
+.modal .word{font-size:1.6rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;margin:6px 0 12px}
+.rank{width:100%;border-collapse:collapse;margin:8px 0 14px}
+.rank td{padding:6px 4px;border-bottom:1px solid var(--line)}
+.rank td:last-child{text-align:right;color:var(--muted)}
+.stats{display:flex;justify-content:space-around;text-align:center;margin:8px 0 14px}
+.stats b{display:block;font-size:1.5rem}
+.stats span{font-size:.75rem;color:var(--muted)}
+.ex{display:flex;gap:4px;margin:6px 0}
+.ex .tile{--ts:34px}
+.handover{text-align:center}
+.handover .who{font-size:1.6rem;font-weight:800;margin:10px 0 16px}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="hdr-left"><button class="iconbtn" id="homeBtn" title="Til menyen" hidden>‹ Meny</button></div>
+    <h1>ORD<span>LE</span></h1>
+    <div class="hdr-right"><button class="iconbtn" id="helpBtn" title="Hvordan spille">?</button></div>
+  </header>
+
+  <!-- MENY -->
+  <section class="screen on" id="menu">
+    <div class="card">
+      <h2>Innstillinger</h2>
+      <div class="row"><label>Antall bokstaver</label>
+        <div class="stepper"><button data-step="len" data-d="-1">−</button><output id="lenOut">5</output><button data-step="len" data-d="1">+</button></div></div>
+      <div class="row"><label>Antall forsøk</label>
+        <div class="stepper"><button data-step="tries" data-d="-1">−</button><output id="triesOut">6</output><button data-step="tries" data-d="1">+</button></div></div>
+      <div class="row"><label class="switch"><input type="checkbox" id="strict"> Bare godkjente ord</label></div>
+      <p class="small" style="margin:4px 0 0">Gjetningene må finnes i den norske ordlisten når dette er på.</p>
+    </div>
+
+    <div class="card">
+      <h2>Spill alene</h2>
+      <div class="btns"><button class="btn green" id="soloBtn">Start spill</button></div>
+    </div>
+
+    <div class="card">
+      <h2>Flere på samme enhet</h2>
+      <p>Alle får det samme hemmelige ordet og gjetter etter tur. Færrest forsøk vinner.</p>
+      <div class="plist" id="plist"></div>
+      <div class="btns"><button class="btn sec" id="addPlayer">+ Legg til spiller</button><button class="btn green" id="localBtn">Start</button></div>
+    </div>
+
+    <div class="card">
+      <h2>Spill online</h2>
+      <p>Lag et rom og del koden. Alle gjetter samme ord samtidig og ser hverandres fremgang.</p>
+      <input class="txt" id="netName" placeholder="Ditt navn" maxlength="16" style="margin-bottom:8px">
+      <div class="btns" style="margin-bottom:8px"><button class="btn" id="hostBtn">Lag rom</button></div>
+      <div class="linkbox" style="margin-top:0"><input class="txt" id="joinCode" placeholder="Romkode" maxlength="5" style="text-transform:uppercase"><button class="btn sec" id="joinBtn">Bli med</button></div>
+    </div>
+
+    <div class="card">
+      <h2>Utfordre en venn</h2>
+      <p>Skriv et eget ord (2–15 bokstaver) og send lenken til en venn. Antall forsøk hentes fra innstillingene.</p>
+      <div class="linkbox" style="margin-top:0"><input class="txt" id="chWord" placeholder="Hemmelig ord" maxlength="15" autocomplete="off"><button class="btn" id="chBtn">Lag lenke</button></div>
+      <div class="linkbox" id="chOut" hidden><input class="txt" id="chLink" readonly><button class="btn sec" id="chCopy">Kopier</button></div>
+    </div>
+  </section>
+
+  <!-- LOBBY -->
+  <section class="screen" id="lobby">
+    <div class="card" style="text-align:center">
+      <p style="margin-bottom:4px">Romkode</p>
+      <div class="code" id="roomCode">-----</div>
+      <div class="linkbox"><input class="txt" id="roomLink" readonly><button class="btn sec" id="roomCopy">Kopier</button></div>
+    </div>
+    <div class="card">
+      <h2>Spillere</h2>
+      <ul class="players" id="lobbyPlayers"></ul>
+    </div>
+    <div class="card">
+      <p id="lobbyInfo"></p>
+      <div class="btns"><button class="btn green" id="lobbyStart" hidden>Start spillet</button></div>
+    </div>
+  </section>
+
+  <!-- SPILL -->
+  <section class="screen" id="game">
+    <div class="status" id="status"></div>
+    <div class="minis" id="minis"></div>
+    <div class="boardwrap" id="boardwrap"><div class="board" id="board"></div></div>
+    <div class="kb" id="kb"></div>
+  </section>
+</div>
+
+<div class="toasts" id="toasts"></div>
+<div class="modal" id="modal"><div class="box" id="modalBox"></div></div>
+
+<script src="ord.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js" defer></script>
+<script>
+"use strict";
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); }catch{ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch{} }
+};
+const LMIN = 3, LMAX = 12, TMIN = 1, TMAX = 15;
+const settings = Object.assign({len:5, tries:6, strict:true, name:'', players:['Spiller 1','Spiller 2']}, store.get('ordle-settings', {}));
+const saveSettings = () => store.set('ordle-settings', settings);
+const LETTER = /^[a-zæøå]$/;
+
+/* ---------- Ordlister ---------- */
+const validCache = {}, answerCache = {};
+function validSet(n){
+  if(!window.ORD_GYLDIGE || !ORD_GYLDIGE[n]) return null;
+  return validCache[n] || (validCache[n] = new Set(ORD_GYLDIGE[n].split(' ')));
+}
+function answers(n){
+  if(answerCache[n]) return answerCache[n];
+  const src = (window.ORD_SVAR && ORD_SVAR[n]) || (window.ORD_GYLDIGE && ORD_GYLDIGE[n]) || '';
+  return answerCache[n] = src ? src.split(' ') : [];
+}
+function randomWord(n){ const a = answers(n); return a[Math.floor(Math.random() * a.length)]; }
+function isValid(w){ const s = validSet(w.length); return s ? s.has(w) : true; }
+
+/* ---------- Vurdering ---------- */
+function evaluate(guess, word){
+  const g = [...guess], w = [...word], res = Array(g.length).fill('absent'), left = {};
+  w.forEach((c, i) => { if(g[i] === c) res[i] = 'correct'; else left[c] = (left[c] || 0) + 1; });
+  g.forEach((c, i) => { if(res[i] !== 'correct' && left[c] > 0){ res[i] = 'present'; left[c]--; } });
+  return res;
+}
+
+/* ---------- Koding av utfordringslenker / ord ---------- */
+const KEY = 'ordle';
+function enc(obj){
+  const b = new TextEncoder().encode(JSON.stringify(obj)).map((x, i) => x ^ KEY.charCodeAt(i % KEY.length));
+  return btoa(String.fromCharCode(...b)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function dec(s){
+  try{
+    const bin = atob(s.replace(/-/g,'+').replace(/_/g,'/'));
+    const b = Uint8Array.from(bin, (c, i) => c.charCodeAt(0) ^ KEY.charCodeAt(i % KEY.length));
+    return JSON.parse(new TextDecoder().decode(b));
+  }catch{ return null; }
+}
+
+/* ---------- UI-hjelpere ---------- */
+function toast(msg){
+  const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
+  $('#toasts').appendChild(t); setTimeout(() => t.remove(), 2300);
+}
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id));
+  $('#homeBtn').hidden = id === 'menu';
+  if(id === 'game') requestAnimationFrame(sizeBoard);
+}
+function openModal(html){ $('#modalBox').innerHTML = html; $('#modal').classList.add('on'); }
+function closeModal(){ $('#modal').classList.remove('on'); }
+$('#modal').addEventListener('click', e => { if(e.target.id === 'modal' && !$('#modal').dataset.locked) closeModal(); });
+async function copy(text){
+  try{ await navigator.clipboard.writeText(text); toast('Kopiert!'); }
+  catch{ toast('Kunne ikke kopiere – marker og kopier manuelt'); }
+}
+
+/* ---------- Meny ---------- */
+function renderSettings(){
+  $('#lenOut').textContent = settings.len;
+  $('#triesOut').textContent = settings.tries;
+  $('#strict').checked = settings.strict;
+  $('#netName').value = settings.name;
+  const pl = $('#plist'); pl.innerHTML = '';
+  settings.players.forEach((n, i) => {
+    const d = document.createElement('div'); d.className = 'pl';
+    d.innerHTML = `<input class="txt" maxlength="16" value="${esc(n)}" placeholder="Spiller ${i+1}"><button title="Fjern">✕</button>`;
+    d.querySelector('input').oninput = e => { settings.players[i] = e.target.value; saveSettings(); };
+    d.querySelector('button').onclick = () => {
+      if(settings.players.length <= 2) return toast('Minst to spillere');
+      settings.players.splice(i, 1); saveSettings(); renderSettings();
+    };
+    pl.appendChild(d);
+  });
+}
+document.querySelectorAll('[data-step]').forEach(b => b.onclick = () => {
+  const k = b.dataset.step, d = +b.dataset.d;
+  const [mn, mx] = k === 'len' ? [LMIN, LMAX] : [TMIN, TMAX];
+  settings[k] = Math.min(mx, Math.max(mn, settings[k] + d)); saveSettings(); renderSettings();
+});
+$('#strict').onchange = e => { settings.strict = e.target.checked; saveSettings(); };
+$('#netName').oninput = e => { settings.name = e.target.value.trim(); saveSettings(); };
+$('#addPlayer').onclick = () => {
+  if(settings.players.length >= 8) return toast('Maks 8 spillere');
+  settings.players.push('Spiller ' + (settings.players.length + 1)); saveSettings(); renderSettings();
+};
+$('#soloBtn').onclick = () => startGame({mode:'solo', word:randomWord(settings.len), tries:settings.tries, players:['Du']});
+$('#localBtn').onclick = () => {
+  const names = settings.players.map((n, i) => n.trim() || 'Spiller ' + (i+1));
+  startGame({mode:'local', word:randomWord(settings.len), tries:settings.tries, players:names});
+};
+$('#chBtn').onclick = () => {
+  const w = $('#chWord').value.trim().toLowerCase();
+  if(w.length < 2 || w.length > 15 || ![...w].every(c => LETTER.test(c))) return toast('Bruk 2–15 bokstaver (a–å)');
+  const link = location.origin + location.pathname + '#u=' + enc({w, t:settings.tries});
+  $('#chLink').value = link; $('#chOut').hidden = false; $('#chWord').value = '';
+  copy(link);
+};
+$('#chCopy').onclick = () => copy($('#chLink').value);
+$('#homeBtn').onclick = () => {
+  if(G && !G.over && G.mode !== 'online' && G.players.some(p => p.guesses.length) && !confirm('Avslutte spillet?')) return;
+  leaveNet(); G = null; closeModal(); history.replaceState(null, '', location.pathname); showScreen('menu');
+};
+$('#helpBtn').onclick = showHelp;
+function showHelp(){
+  const ex = (word, cls) => `<div class="ex">${[...word].map((c, i) => `<div class="tile ${cls[i]||''}">${c}</div>`).join('')}</div>`;
+  openModal(`<h2>Hvordan spille</h2>
+    <p>Gjett det hemmelige ordet. Hver gjetning må ha riktig antall bokstaver. Trykk <b>Enter</b> for å sende.</p>
+    ${ex('skole', ['correct'])}<p class="small"><b>S</b> er med og på riktig plass.</p>
+    ${ex('fjell', ['', '', 'present'])}<p class="small"><b>E</b> er med, men på feil plass.</p>
+    ${ex('tavle', ['', '', '', 'absent'])}<p class="small"><b>L</b> er ikke med i ordet.</p>
+    <p class="small">Du velger selv antall bokstaver (${LMIN}–${LMAX}) og antall forsøk i menyen. Standard er 5 bokstaver og 6 forsøk.</p>
+    <div class="btns"><button class="btn" onclick="closeModal()">Skjønner!</button></div>`);
+}
+
+/* ---------- Spilltilstand ---------- */
+let G = null;
+function startGame({mode, word, tries, players, me = 0, strict = settings.strict}){
+  closeModal();
+  G = { mode, word, len:[...word].length, tries,
+        players: players.map(name => ({name, guesses:[], results:[], done:false, won:false})),
+        cur:0, me, strict, input:'', over:false, locked:false, reveal:-1, started:Date.now() };
+  buildKeyboard(); render(); showScreen('game');
+  if(mode === 'local') handover();
+}
+function curP(){ return G.players[G.cur]; }
+
+function key(k){
+  if(!G || G.over || G.locked || $('#modal').classList.contains('on')) return;
+  const p = curP(); if(p.done) return;
+  if(k === 'enter') return submit();
+  if(k === 'back') G.input = G.input.slice(0, -1);
+  else if(LETTER.test(k) && [...G.input].length < G.len) G.input += k;
+  else return;
+  renderBoard();
+}
+function shakeRow(){
+  const r = $('#board').children[curP().guesses.length]; if(!r) return;
+  r.classList.remove('shake'); void r.offsetWidth; r.classList.add('shake');
+}
+function submit(){
+  const p = curP(), g = G.input;
+  if([...g].length < G.len){ shakeRow(); return toast('For få bokstaver'); }
+  if(G.strict && g !== G.word && !isValid(g)){ shakeRow(); return toast('Ikke i ordlisten'); }
+  p.guesses.push(g); p.results.push(evaluate(g, G.word)); G.input = '';
+  if(g === G.word){ p.done = true; p.won = true; p.time = Date.now() - G.started; }
+  else if(p.guesses.length >= G.tries) p.done = true;
+  G.reveal = p.guesses.length - 1; G.locked = true;
+  renderBoard();
+  if(G.mode === 'online') netProgress(p);
+  const dur = G.len * 250 + 300;
+  setTimeout(() => {
+    G.reveal = -1; G.locked = false;
+    renderKeyboard(); renderMinis();
+    if(p.won){ const r = $('#board').children[p.guesses.length - 1]; r && r.classList.add('win'); }
+    afterGuess(p);
+  }, dur);
+}
+function afterGuess(p){
+  const msgs = ['Genialt!','Fantastisk!','Imponerende!','Strålende!','Flott!','Bra!','Puh!'];
+  if(G.mode === 'solo' || G.mode === 'challenge'){
+    if(!p.done) return renderStatus();
+    G.over = true; renderStatus();
+    if(G.mode === 'solo') recordStats(p);
+    setTimeout(() => endSingle(p), p.won ? 900 : 400);
+    if(p.won) toast(msgs[Math.min(p.guesses.length - 1, msgs.length - 1)]);
+    return;
+  }
+  if(G.mode === 'local'){
+    if(p.won) toast(`${p.name} klarte det på ${p.guesses.length}!`);
+    if(G.players.every(x => x.done)){ G.over = true; renderStatus(); setTimeout(() => endMulti(G.players), 900); return; }
+    let n = G.cur;
+    do { n = (n + 1) % G.players.length; } while(G.players[n].done);
+    const changed = n !== G.cur; G.cur = n;
+    setTimeout(() => { render(); if(changed) handover(); }, p.won ? 900 : 350);
+    return;
+  }
+  if(G.mode === 'online'){
+    if(p.won) toast(msgs[Math.min(p.guesses.length - 1, msgs.length - 1)]);
+    renderStatus(); checkNetDone();
+  }
+}
+function handover(){
+  $('#modal').dataset.locked = '1';
+  openModal(`<div class="handover"><p>Gi enheten til</p><div class="who">${esc(curP().name)}</div>
+    <button class="btn green" id="readyBtn">Jeg er klar</button></div>`);
+  $('#readyBtn').onclick = () => { delete $('#modal').dataset.locked; closeModal(); render(); };
+}
+
+/* ---------- Statistikk (alene) ---------- */
+function recordStats(p){
+  const s = store.get('ordle-stats', {played:0, won:0, streak:0, best:0});
+  s.played++; if(p.won){ s.won++; s.streak++; s.best = Math.max(s.best, s.streak); } else s.streak = 0;
+  store.set('ordle-stats', s);
+}
+
+/* ---------- Slutt-dialoger ---------- */
+function shareText(p){
+  const e = {correct:'🟩', present:'🟨', absent:'⬛'};
+  return `Ordle ${G.len} bokstaver ${p.won ? p.guesses.length : 'X'}/${G.tries}\n` + p.results.map(r => r.map(x => e[x]).join('')).join('\n');
+}
+function endSingle(p){
+  const s = store.get('ordle-stats', null);
+  const stats = G.mode === 'solo' && s ? `<div class="stats"><div><b>${s.played}</b><span>Spilt</span></div><div><b>${Math.round(100 * s.won / s.played)}</b><span>Vunnet %</span></div><div><b>${s.streak}</b><span>På rad</span></div><div><b>${s.best}</b><span>Beste rekke</span></div></div>` : '';
+  openModal(`<h2>${p.won ? 'Du klarte det!' : 'Bedre lykke neste gang'}</h2>
+    <p>${p.won ? `Du brukte ${p.guesses.length} av ${G.tries} forsøk.` : 'Ordet var:'}</p>
+    <div class="word">${esc(G.word)}</div>${stats}
+    <div class="btns"><button class="btn sec" id="shareBtn">Del resultat</button>
+    <button class="btn green" id="againBtn">${G.mode === 'challenge' ? 'Spill vanlig' : 'Nytt ord'}</button></div>`);
+  $('#shareBtn').onclick = () => copy(shareText(p));
+  $('#againBtn').onclick = () => { history.replaceState(null, '', location.pathname); startGame({mode:'solo', word:randomWord(settings.len), tries:settings.tries, players:['Du']}); };
+}
+function rankRows(list){
+  const sorted = [...list].sort((a, b) => (b.won - a.won) || (a.won ? (a.n - b.n) || ((a.time||0) - (b.time||0)) : 0));
+  let place = 0, prev = null;
+  return sorted.map((p, i) => {
+    const key = p.won ? p.n : 'x';
+    if(key !== prev) place = i + 1; prev = key;
+    const medal = p.won ? (['🥇','🥈','🥉'][place - 1] || place + '.') : '–';
+    return `<tr><td>${medal}</td><td>${esc(p.name)}</td><td>${p.won ? p.n + ' forsøk' : 'Klarte det ikke'}</td></tr>`;
+  }).join('');
+}
+function endMulti(list){
+  const rows = list.map(p => ({name:p.name, won:p.won, n:p.guesses ? p.guesses.length : p.n, time:p.time}));
+  const winners = rows.filter(r => r.won);
+  const best = winners.length ? Math.min(...winners.map(r => r.n)) : 0;
+  const top = winners.filter(r => r.n === best);
+  const title = !winners.length ? 'Ingen klarte det!' : top.length > 1 && G.mode === 'local' ? 'Uavgjort!' : `${esc(G.mode === 'online' ? rankWinner(rows) : top[0].name)} vant!`;
+  const isHost = G.mode !== 'online' || NET.host;
+  openModal(`<h2>${title}</h2><p>Ordet var:</p><div class="word">${esc(G.word)}</div>
+    <table class="rank">${rankRows(rows)}</table>
+    <div class="btns">${isHost ? `<button class="btn green" id="againBtn">Ny runde</button>` : `<p class="small">Venter på at verten starter en ny runde …</p>`}</div>`);
+  if(isHost) $('#againBtn').onclick = () => {
+    if(G.mode === 'online') return hostStartRound();
+    startGame({mode:'local', word:randomWord(settings.len), tries:settings.tries, players:G.players.map(p => p.name)});
+  };
+}
+function rankWinner(rows){
+  const w = rows.filter(r => r.won).sort((a, b) => (a.n - b.n) || ((a.time||0) - (b.time||0)));
+  return w[0].name;
+}
+
+/* ---------- Tegning ---------- */
+function render(){ renderStatus(); renderMinis(); renderBoard(); renderKeyboard(); }
+function renderStatus(){
+  const p = curP(), el = $('#status');
+  const left = G.tries - p.guesses.length;
+  let main = '', sub = `${G.len} bokstaver · ${left} forsøk igjen`;
+  if(G.mode === 'local') main = `${esc(p.name)} sin tur`;
+  else if(G.mode === 'online'){
+    main = p.done ? (p.won ? `Løst på ${p.guesses.length}!` : 'Tom for forsøk') : 'Online';
+    if(p.done) sub = 'Venter på de andre …';
+  }
+  else if(G.mode === 'challenge') main = 'Utfordring fra en venn';
+  if(G.over && G.mode !== 'online') sub = 'Spillet er ferdig';
+  el.innerHTML = `${main}<span class="sub">${sub}</span>`;
+}
+function miniHTML(name, results, done, won, active){
+  const cells = [];
+  for(let r = 0; r < G.tries; r++) for(let c = 0; c < G.len; c++) cells.push(`<div class="c ${results[r] ? results[r][c] : ''}"></div>`);
+  const st = won ? `✔ ${results.length}` : done ? '✘' : `${results.length}/${G.tries}`;
+  return `<div class="mini${active ? ' active' : ''}"><div class="nm">${esc(name)}</div>
+    <div class="g" style="grid-template-columns:repeat(${G.len},9px)">${cells.join('')}</div><div class="st">${st}</div></div>`;
+}
+function renderMinis(){
+  const el = $('#minis');
+  if(G.mode === 'local') el.innerHTML = G.players.map((p, i) => miniHTML(p.name, p.results, p.done, p.won, i === G.cur)).join('');
+  else if(G.mode === 'online') el.innerHTML = Object.entries(NET.players).filter(([id]) => id !== NET.myId)
+      .map(([, p]) => miniHTML(p.name, p.results || [], p.done, p.won, false)).join('');
+  else el.innerHTML = '';
+  sizeBoard();
+}
+function renderBoard(){
+  const p = curP(), b = $('#board'); b.style.setProperty('--n', G.len);
+  let html = '';
+  for(let r = 0; r < G.tries; r++){
+    html += '<div class="brow">';
+    const g = r < p.guesses.length ? [...p.guesses[r]] : r === p.guesses.length ? [...G.input] : [];
+    for(let c = 0; c < G.len; c++){
+      const ch = g[c] || '';
+      let cls = ch ? 'filled' : '';
+      if(r < p.guesses.length){ cls = p.results[r][c]; if(r === G.reveal) cls += ' reveal'; }
+      const delay = r === G.reveal ? ` style="animation-delay:${c * 250}ms"` : '';
+      html += `<div class="tile ${cls}"${delay}>${esc(ch)}</div>`;
+    }
+    html += '</div>';
+  }
+  b.innerHTML = html;
+}
+function sizeBoard(){
+  if(!G) return;
+  const wrap = $('#boardwrap'), gap = 5;
+  const W = wrap.clientWidth - 32, H = wrap.clientHeight - 12;
+  if(W <= 0 || H <= 0) return;
+  const ts = Math.max(16, Math.min(62, Math.floor((W - (G.len - 1) * gap) / G.len), Math.floor((H - (G.tries - 1) * gap) / G.tries)));
+  $('#board').style.setProperty('--ts', ts + 'px');
+}
+addEventListener('resize', sizeBoard);
+
+const ROWS = ['qwertyuiopå', 'asdfghjkløæ', '<zxcvbnm>'];
+function buildKeyboard(){
+  $('#kb').innerHTML = ROWS.map(r => `<div class="kr">${[...r].map(c =>
+    c === '<' ? `<button class="k wide" data-k="enter">Enter</button>` :
+    c === '>' ? `<button class="k wide" data-k="back" aria-label="Slett">⌫</button>` :
+    `<button class="k" data-k="${c}">${c}</button>`).join('')}</div>`).join('');
+}
+function renderKeyboard(){
+  const p = curP(), rank = {absent:1, present:2, correct:3}, st = {};
+  p.guesses.forEach((g, r) => [...g].forEach((c, i) => {
+    const v = p.results[r][i]; if(!st[c] || rank[v] > rank[st[c]]) st[c] = v;
+  }));
+  document.querySelectorAll('#kb .k').forEach(k => {
+    k.classList.remove('correct', 'present', 'absent');
+    if(st[k.dataset.k]) k.classList.add(st[k.dataset.k]);
+  });
+}
+$('#kb').addEventListener('click', e => { const b = e.target.closest('.k'); if(b){ key(b.dataset.k); b.blur(); } });
+addEventListener('keydown', e => {
+  if(!$('#game').classList.contains('on') || e.ctrlKey || e.metaKey || e.altKey) return;
+  if(document.activeElement && document.activeElement.tagName === 'INPUT') return;
+  const k = e.key.toLowerCase();
+  if(k === 'enter'){ e.preventDefault(); key('enter'); }
+  else if(k === 'backspace') key('back');
+  else if(LETTER.test(k)) key(k);
+});
+
+/* ---------- Online (PeerJS, peer-to-peer) ---------- */
+const NET = { peer:null, host:false, conns:[], conn:null, code:'', myId:'', players:{}, game:null };
+const PREFIX = 'okg-ordle-';
+function randCode(){ const a = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; return Array.from({length:5}, () => a[Math.floor(Math.random() * a.length)]).join(''); }
+function needName(){
+  const n = $('#netName').value.trim();
+  if(!n){ toast('Skriv inn navnet ditt først'); $('#netName').focus(); return null; }
+  settings.name = n; saveSettings(); return n;
+}
+function peerReady(){
+  if(window.Peer) return true;
+  toast('Kunne ikke laste online-modulen. Sjekk nettforbindelsen.'); return false;
+}
+function leaveNet(){
+  try{ NET.conns.forEach(c => c.close()); NET.conn && NET.conn.close(); NET.peer && NET.peer.destroy(); }catch{}
+  Object.assign(NET, {peer:null, host:false, conns:[], conn:null, code:'', myId:'', players:{}, game:null});
+}
+function hostRoom(tries = 0){
+  const name = needName(); if(!name || !peerReady()) return;
+  leaveNet();
+  NET.host = true; NET.code = randCode();
+  const peer = NET.peer = new Peer(PREFIX + NET.code, {debug:0});
+  peer.on('open', id => {
+    NET.myId = id; NET.players = {[id]: {name, results:[], done:false, won:false}};
+    showLobby();
+  });
+  peer.on('connection', c => {
+    c.on('data', d => hostRecv(c, d));
+    c.on('close', () => { NET.conns = NET.conns.filter(x => x !== c); delete NET.players[c.peer]; hostBroadcastPlayers(); });
+    c.on('error', () => {});
+  });
+  peer.on('error', e => {
+    if(e.type === 'unavailable-id' && tries < 3) return hostRoom(tries + 1);
+    netError(e);
+  });
+}
+function joinRoom(code){
+  const name = needName(); if(!name || !peerReady()) return;
+  code = code.trim().toUpperCase(); if(code.length !== 5) return toast('Romkoden har 5 tegn');
+  leaveNet(); NET.code = code;
+  const peer = NET.peer = new Peer({debug:0});
+  toast('Kobler til …');
+  peer.on('open', id => {
+    NET.myId = id;
+    const c = NET.conn = peer.connect(PREFIX + code, {reliable:true});
+    c.on('open', () => c.send({t:'join', name}));
+    c.on('data', clientRecv);
+    c.on('close', () => { if(NET.conn === c){ toast('Forbindelsen til verten ble brutt'); leaveNet(); G = null; closeModal(); showScreen('menu'); } });
+  });
+  peer.on('error', netError);
+}
+function netError(e){
+  const m = e.type === 'peer-unavailable' ? 'Fant ikke rommet – sjekk koden' :
+            e.type === 'network' || e.type === 'server-error' ? 'Får ikke kontakt med server' : 'Nettverksfeil: ' + e.type;
+  toast(m);
+  if(e.type === 'peer-unavailable' || e.type === 'network' || e.type === 'server-error'){ leaveNet(); if(!G) showScreen('menu'); }
+}
+function send(c, m){ try{ c.open && c.send(m); }catch{} }
+function broadcast(m){ NET.conns.forEach(c => send(c, m)); }
+function hostRecv(c, d){
+  if(d.t === 'join'){
+    if(!NET.conns.includes(c)) NET.conns.push(c);
+    NET.players[c.peer] = {name:String(d.name).slice(0, 16), results:[], done:false, won:false};
+    if(NET.game) send(c, {t:'start', g:NET.game});
+    hostBroadcastPlayers();
+  } else if(d.t === 'progress' && NET.players[c.peer]){
+    Object.assign(NET.players[c.peer], pick(d));
+    hostBroadcastPlayers();
+  }
+}
+const pick = d => ({results:d.results, done:d.done, won:d.won, n:d.n, time:d.time});
+function hostBroadcastPlayers(){
+  broadcast({t:'players', players:NET.players});
+  onPlayers();
+}
+function clientRecv(d){
+  if(d.t === 'players'){ NET.players = d.players; if(!G && !$('#lobby').classList.contains('on')) showLobby(); onPlayers(); }
+  else if(d.t === 'start') beginOnline(d.g);
+}
+function onPlayers(){
+  if($('#lobby').classList.contains('on')) renderLobby();
+  if(G && G.mode === 'online'){ renderMinis(); checkNetDone(); }
+}
+function showLobby(){
+  const link = location.origin + location.pathname + '#rom=' + NET.code;
+  $('#roomCode').textContent = NET.code; $('#roomLink').value = link;
+  $('#lobbyStart').hidden = !NET.host;
+  $('#lobbyInfo').textContent = NET.host
+    ? `Ordet får ${settings.len} bokstaver og ${settings.tries} forsøk. Start når alle er med.`
+    : 'Venter på at verten starter spillet …';
+  renderLobby(); showScreen('lobby');
+}
+function renderLobby(){
+  const host = PREFIX + NET.code;
+  $('#lobbyPlayers').innerHTML = Object.entries(NET.players).map(([id, p]) =>
+    `<li><span>${esc(p.name)}${id === NET.myId ? ' (deg)' : ''}</span><span class="small">${id === host ? 'Vert' : ''}</span></li>`).join('');
+}
+$('#hostBtn').onclick = () => hostRoom();
+$('#joinBtn').onclick = () => joinRoom($('#joinCode').value);
+$('#joinCode').addEventListener('keydown', e => { if(e.key === 'Enter') joinRoom(e.target.value); });
+$('#roomCopy').onclick = () => copy($('#roomLink').value);
+$('#lobbyStart').onclick = () => hostStartRound();
+function hostStartRound(){
+  if(Object.keys(NET.players).length < 2 && !confirm('Du er alene i rommet. Starte likevel?')) return;
+  const g = {w:enc({w:randomWord(settings.len)}), tries:settings.tries, strict:settings.strict};
+  NET.game = g;
+  for(const p of Object.values(NET.players)) Object.assign(p, {results:[], done:false, won:false, n:0, time:0});
+  broadcast({t:'start', g}); broadcast({t:'players', players:NET.players});
+  beginOnline(g);
+}
+function beginOnline(g){
+  const w = dec(g.w); if(!w) return;
+  NET.game = g; NET.shownResults = false;
+  if(!NET.host) for(const p of Object.values(NET.players)) Object.assign(p, {results:[], done:false, won:false});
+  startGame({mode:'online', word:w.w, tries:g.tries, strict:g.strict, players:[settings.name || 'Du']});
+}
+function netProgress(p){
+  const d = {results:p.results, done:p.done, won:p.won, n:p.guesses.length, time:p.time || 0};
+  if(NET.host){ Object.assign(NET.players[NET.myId], d); hostBroadcastPlayers(); }
+  else send(NET.conn, {t:'progress', ...d});
+}
+function checkNetDone(){
+  if(!G || G.mode !== 'online' || NET.shownResults || G.locked) return;
+  const list = Object.values(NET.players);
+  if(!list.length || !list.every(p => p.done) || !curP().done) return;
+  NET.shownResults = true; G.over = true;
+  setTimeout(() => endMulti(list.map(p => ({name:p.name, won:p.won, n:p.n || (p.results||[]).length, time:p.time}))), 900);
+}
+
+/* ---------- Oppstart ---------- */
+function boot(){
+  renderSettings();
+  const h = location.hash.slice(1), [k, v] = h.split('=');
+  if(k === 'u' && v){
+    const d = dec(v);
+    if(d && typeof d.w === 'string' && [...d.w].every(c => LETTER.test(c)))
+      return startGame({mode:'challenge', word:d.w, tries:Math.min(TMAX, Math.max(TMIN, +d.t || 6)), players:['Du']});
+    toast('Ugyldig utfordringslenke');
+  } else if(k === 'rom' && v){
+    $('#joinCode').value = v.toUpperCase();
+    toast('Skriv navnet ditt og trykk «Bli med»');
+  }
+  if(!store.get('ordle-seen-help', false)){ store.set('ordle-seen-help', true); showHelp(); }
+}
+boot();
+</script>
+</body>
+</html>

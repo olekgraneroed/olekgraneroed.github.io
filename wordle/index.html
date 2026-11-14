@@ -71,6 +71,10 @@ header h1 span{color:var(--correct)}
 #game{flex-direction:column}
 .status{text-align:center;padding:8px 16px 2px;font-weight:650;min-height:32px;flex:none}
 .status .sub{display:block;font-weight:400;font-size:.85rem;color:var(--muted)}
+.timer{font-variant-numeric:tabular-nums;font-weight:700;color:var(--text)}
+.timer.low{color:var(--danger)}
+.timer.low.blink{animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:.35}}
 .minis{display:flex;gap:10px;overflow-x:auto;padding:6px 16px;flex:none;justify-content:center;flex-wrap:wrap}
 .minis:empty{display:none}
 .mini{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:.72rem;padding:4px 6px;border-radius:8px;border:1px solid transparent}
@@ -150,6 +154,8 @@ header h1 span{color:var(--correct)}
         <div class="stepper"><button data-step="len" data-d="-1">−</button><output id="lenOut">5</output><button data-step="len" data-d="1">+</button></div></div>
       <div class="row"><label>Antall forsøk</label>
         <div class="stepper"><button data-step="tries" data-d="-1">−</button><output id="triesOut">6</output><button data-step="tries" data-d="1">+</button></div></div>
+      <div class="row"><label>Tid per spiller</label>
+        <div class="stepper"><button data-step="time" data-d="-1">−</button><output id="timeOut">3 min</output><button data-step="time" data-d="1">+</button></div></div>
       <div class="row"><label class="switch"><input type="checkbox" id="strict"> Bare godkjente ord</label></div>
       <p class="small" style="margin:4px 0 0">Gjetningene må finnes i den norske ordlisten når dette er på.</p>
     </div>
@@ -176,7 +182,7 @@ header h1 span{color:var(--correct)}
 
     <div class="card">
       <h2>Utfordre en venn</h2>
-      <p>Skriv et eget ord (2–15 bokstaver) og send lenken til en venn. Antall forsøk hentes fra innstillingene.</p>
+      <p>Skriv et eget ord (2–15 bokstaver) og send lenken til en venn. Antall forsøk og tid hentes fra innstillingene.</p>
       <div class="linkbox" style="margin-top:0"><input class="txt" id="chWord" placeholder="Hemmelig ord" maxlength="15" autocomplete="off"><button class="btn" id="chBtn">Lag lenke</button></div>
       <div class="linkbox" id="chOut" hidden><input class="txt" id="chLink" readonly><button class="btn sec" id="chCopy">Kopier</button></div>
     </div>
@@ -221,8 +227,8 @@ const store = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); }catch{ return d; } },
   set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch{} }
 };
-const LMIN = 3, LMAX = 12, TMIN = 1, TMAX = 15;
-const settings = Object.assign({len:5, tries:6, strict:true, name:'', players:['Spiller 1','Spiller 2']}, store.get('ordle-settings', {}));
+const LMIN = 3, LMAX = 12, TMIN = 1, TMAX = 15, MMAX = 10;
+const settings = Object.assign({len:5, tries:6, time:3, strict:true, name:'', players:['Spiller 1','Spiller 2']}, store.get('ordle-settings', {}));
 const saveSettings = () => store.set('ordle-settings', settings);
 const LETTER = /^[a-zæøå]$/;
 
@@ -284,6 +290,7 @@ async function copy(text){
 function renderSettings(){
   $('#lenOut').textContent = settings.len;
   $('#triesOut').textContent = settings.tries;
+  $('#timeOut').textContent = settings.time ? settings.time + ' min' : 'Av';
   $('#strict').checked = settings.strict;
   $('#netName').value = settings.name;
   const pl = $('#plist'); pl.innerHTML = '';
@@ -300,7 +307,7 @@ function renderSettings(){
 }
 document.querySelectorAll('[data-step]').forEach(b => b.onclick = () => {
   const k = b.dataset.step, d = +b.dataset.d;
-  const [mn, mx] = k === 'len' ? [LMIN, LMAX] : [TMIN, TMAX];
+  const [mn, mx] = k === 'len' ? [LMIN, LMAX] : k === 'time' ? [0, MMAX] : [TMIN, TMAX];
   settings[k] = Math.min(mx, Math.max(mn, settings[k] + d)); saveSettings(); renderSettings();
 });
 $('#strict').onchange = e => { settings.strict = e.target.checked; saveSettings(); };
@@ -309,15 +316,15 @@ $('#addPlayer').onclick = () => {
   if(settings.players.length >= 8) return toast('Maks 8 spillere');
   settings.players.push('Spiller ' + (settings.players.length + 1)); saveSettings(); renderSettings();
 };
-$('#soloBtn').onclick = () => startGame({mode:'solo', word:randomWord(settings.len), tries:settings.tries, players:['Du']});
+$('#soloBtn').onclick = () => startGame({mode:'solo', word:randomWord(settings.len), tries:settings.tries, time:settings.time, players:['Du']});
 $('#localBtn').onclick = () => {
   const names = settings.players.map((n, i) => n.trim() || 'Spiller ' + (i+1));
-  startGame({mode:'local', word:randomWord(settings.len), tries:settings.tries, players:names});
+  startGame({mode:'local', word:randomWord(settings.len), tries:settings.tries, time:settings.time, players:names});
 };
 $('#chBtn').onclick = () => {
   const w = $('#chWord').value.trim().toLowerCase();
   if(w.length < 2 || w.length > 15 || ![...w].every(c => LETTER.test(c))) return toast('Bruk 2–15 bokstaver (a–å)');
-  const link = location.origin + location.pathname + '#u=' + enc({w, t:settings.tries});
+  const link = location.origin + location.pathname + '#u=' + enc({w, t:settings.tries, m:settings.time});
   $('#chLink').value = link; $('#chOut').hidden = false; $('#chWord').value = '';
   copy(link);
 };
@@ -335,19 +342,46 @@ function showHelp(){
     ${ex('fjell', ['', '', 'present'])}<p class="small"><b>E</b> er med, men på feil plass.</p>
     ${ex('tavle', ['', '', '', 'absent'])}<p class="small"><b>L</b> er ikke med i ordet.</p>
     <p class="small">Du velger selv antall bokstaver (${LMIN}–${LMAX}) og antall forsøk i menyen. Standard er 5 bokstaver og 6 forsøk.</p>
+    <p class="small">⏱ Du har <b>3 minutter</b> på deg som standard. Når tiden er ute, har du tapt. Tiden kan endres eller slås av i menyen. Med flere på samme enhet har hver spiller sin egen klokke, som bare går når det er din tur.</p>
     <div class="btns"><button class="btn" onclick="closeModal()">Skjønner!</button></div>`);
 }
 
 /* ---------- Spilltilstand ---------- */
 let G = null;
-function startGame({mode, word, tries, players, me = 0, strict = settings.strict}){
+function startGame({mode, word, tries, players, me = 0, strict = settings.strict, time = 0}){
   closeModal();
-  G = { mode, word, len:[...word].length, tries,
-        players: players.map(name => ({name, guesses:[], results:[], done:false, won:false})),
+  G = { mode, word, len:[...word].length, tries, limit:time * 60000, runFrom:0,
+        players: players.map(name => ({name, guesses:[], results:[], done:false, won:false, used:0})),
         cur:0, me, strict, input:'', over:false, locked:false, reveal:-1, started:Date.now() };
   buildKeyboard(); render(); showScreen('game');
-  if(mode === 'local') handover();
+  if(mode === 'local') handover(); else clockStart();
 }
+
+/* ---------- Tidtaker (sjakkur: hver spiller har sin egen tid) ---------- */
+function clockStart(){ if(G && G.limit && !G.over && !curP().done && !G.runFrom) G.runFrom = Date.now(); }
+function clockStop(){ if(G && G.runFrom){ curP().used += Date.now() - G.runFrom; G.runFrom = 0; } }
+function remaining(p){ return G.limit - p.used - (p === curP() && G.runFrom ? Date.now() - G.runFrom : 0); }
+function fmt(ms){ const s = Math.max(0, Math.ceil(ms / 1000)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+function renderTimer(){
+  const el = $('#timer'); if(!el || !G || !G.limit) return;
+  const ms = remaining(curP());
+  el.textContent = '⏱ ' + fmt(ms);
+  el.classList.toggle('low', ms <= 30000);
+  el.classList.toggle('blink', ms <= 10000 && !!G.runFrom);
+}
+function timeUp(){
+  const p = curP();
+  clockStop(); p.used = G.limit; p.done = true; p.timeout = true; G.input = '';
+  toast(G.mode === 'local' ? `Tiden er ute for ${p.name}!` : 'Tiden er ute!');
+  renderBoard(); renderMinis();
+  if(G.mode === 'online') netProgress(p);
+  afterGuess(p);
+}
+setInterval(() => {
+  if(!G || !G.limit || G.over) return;
+  renderTimer();
+  if(G.runFrom && !G.locked && remaining(curP()) <= 0) timeUp();
+}, 200);
 function curP(){ return G.players[G.cur]; }
 
 function key(k){
@@ -370,6 +404,7 @@ function submit(){
   p.guesses.push(g); p.results.push(evaluate(g, G.word)); G.input = '';
   if(g === G.word){ p.done = true; p.won = true; p.time = Date.now() - G.started; }
   else if(p.guesses.length >= G.tries) p.done = true;
+  if(p.done || G.mode === 'local') clockStop();
   G.reveal = p.guesses.length - 1; G.locked = true;
   renderBoard();
   if(G.mode === 'online') netProgress(p);
@@ -397,7 +432,7 @@ function afterGuess(p){
     let n = G.cur;
     do { n = (n + 1) % G.players.length; } while(G.players[n].done);
     const changed = n !== G.cur; G.cur = n;
-    setTimeout(() => { render(); if(changed) handover(); }, p.won ? 900 : 350);
+    setTimeout(() => { render(); if(changed) handover(); else clockStart(); }, p.won ? 900 : 350);
     return;
   }
   if(G.mode === 'online'){
@@ -409,7 +444,7 @@ function handover(){
   $('#modal').dataset.locked = '1';
   openModal(`<div class="handover"><p>Gi enheten til</p><div class="who">${esc(curP().name)}</div>
     <button class="btn green" id="readyBtn">Jeg er klar</button></div>`);
-  $('#readyBtn').onclick = () => { delete $('#modal').dataset.locked; closeModal(); render(); };
+  $('#readyBtn').onclick = () => { delete $('#modal').dataset.locked; closeModal(); render(); clockStart(); };
 }
 
 /* ---------- Statistikk (alene) ---------- */
@@ -427,13 +462,13 @@ function shareText(p){
 function endSingle(p){
   const s = store.get('ordle-stats', null);
   const stats = G.mode === 'solo' && s ? `<div class="stats"><div><b>${s.played}</b><span>Spilt</span></div><div><b>${Math.round(100 * s.won / s.played)}</b><span>Vunnet %</span></div><div><b>${s.streak}</b><span>På rad</span></div><div><b>${s.best}</b><span>Beste rekke</span></div></div>` : '';
-  openModal(`<h2>${p.won ? 'Du klarte det!' : 'Bedre lykke neste gang'}</h2>
+  openModal(`<h2>${p.won ? 'Du klarte det!' : p.timeout ? 'Tiden er ute!' : 'Bedre lykke neste gang'}</h2>
     <p>${p.won ? `Du brukte ${p.guesses.length} av ${G.tries} forsøk.` : 'Ordet var:'}</p>
     <div class="word">${esc(G.word)}</div>${stats}
     <div class="btns"><button class="btn sec" id="shareBtn">Del resultat</button>
     <button class="btn green" id="againBtn">${G.mode === 'challenge' ? 'Spill vanlig' : 'Nytt ord'}</button></div>`);
   $('#shareBtn').onclick = () => copy(shareText(p));
-  $('#againBtn').onclick = () => { history.replaceState(null, '', location.pathname); startGame({mode:'solo', word:randomWord(settings.len), tries:settings.tries, players:['Du']}); };
+  $('#againBtn').onclick = () => { history.replaceState(null, '', location.pathname); startGame({mode:'solo', word:randomWord(settings.len), tries:settings.tries, time:settings.time, players:['Du']}); };
 }
 function rankRows(list){
   const sorted = [...list].sort((a, b) => (b.won - a.won) || (a.won ? (a.n - b.n) || ((a.time||0) - (b.time||0)) : 0));
@@ -442,11 +477,11 @@ function rankRows(list){
     const key = p.won ? p.n : 'x';
     if(key !== prev) place = i + 1; prev = key;
     const medal = p.won ? (['🥇','🥈','🥉'][place - 1] || place + '.') : '–';
-    return `<tr><td>${medal}</td><td>${esc(p.name)}</td><td>${p.won ? p.n + ' forsøk' : 'Klarte det ikke'}</td></tr>`;
+    return `<tr><td>${medal}</td><td>${esc(p.name)}</td><td>${p.won ? p.n + ' forsøk' : p.timeout ? 'Tiden gikk ut' : 'Klarte det ikke'}</td></tr>`;
   }).join('');
 }
 function endMulti(list){
-  const rows = list.map(p => ({name:p.name, won:p.won, n:p.guesses ? p.guesses.length : p.n, time:p.time}));
+  const rows = list.map(p => ({name:p.name, won:p.won, n:p.guesses ? p.guesses.length : p.n, time:p.time, timeout:p.timeout}));
   const winners = rows.filter(r => r.won);
   const best = winners.length ? Math.min(...winners.map(r => r.n)) : 0;
   const top = winners.filter(r => r.n === best);
@@ -457,7 +492,7 @@ function endMulti(list){
     <div class="btns">${isHost ? `<button class="btn green" id="againBtn">Ny runde</button>` : `<p class="small">Venter på at verten starter en ny runde …</p>`}</div>`);
   if(isHost) $('#againBtn').onclick = () => {
     if(G.mode === 'online') return hostStartRound();
-    startGame({mode:'local', word:randomWord(settings.len), tries:settings.tries, players:G.players.map(p => p.name)});
+    startGame({mode:'local', word:randomWord(settings.len), tries:settings.tries, time:settings.time, players:G.players.map(p => p.name)});
   };
 }
 function rankWinner(rows){
@@ -477,21 +512,24 @@ function renderStatus(){
     if(p.done) sub = 'Venter på de andre …';
   }
   else if(G.mode === 'challenge') main = 'Utfordring fra en venn';
+  if(G.mode === 'online' && p.timeout) main = 'Tiden er ute';
   if(G.over && G.mode !== 'online') sub = 'Spillet er ferdig';
-  el.innerHTML = `${main}<span class="sub">${sub}</span>`;
+  const timer = G.limit ? ` · <span class="timer" id="timer"></span>` : '';
+  el.innerHTML = `${main}<span class="sub">${sub}${timer}</span>`;
+  renderTimer();
 }
-function miniHTML(name, results, done, won, active){
+function miniHTML(name, results, done, won, active, timeout){
   const cells = [];
   for(let r = 0; r < G.tries; r++) for(let c = 0; c < G.len; c++) cells.push(`<div class="c ${results[r] ? results[r][c] : ''}"></div>`);
-  const st = won ? `✔ ${results.length}` : done ? '✘' : `${results.length}/${G.tries}`;
+  const st = won ? `✔ ${results.length}` : done ? (timeout ? '⏱' : '✘') : `${results.length}/${G.tries}`;
   return `<div class="mini${active ? ' active' : ''}"><div class="nm">${esc(name)}</div>
     <div class="g" style="grid-template-columns:repeat(${G.len},9px)">${cells.join('')}</div><div class="st">${st}</div></div>`;
 }
 function renderMinis(){
   const el = $('#minis');
-  if(G.mode === 'local') el.innerHTML = G.players.map((p, i) => miniHTML(p.name, p.results, p.done, p.won, i === G.cur)).join('');
+  if(G.mode === 'local') el.innerHTML = G.players.map((p, i) => miniHTML(p.name, p.results, p.done, p.won, i === G.cur, p.timeout)).join('');
   else if(G.mode === 'online') el.innerHTML = Object.entries(NET.players).filter(([id]) => id !== NET.myId)
-      .map(([, p]) => miniHTML(p.name, p.results || [], p.done, p.won, false)).join('');
+      .map(([, p]) => miniHTML(p.name, p.results || [], p.done, p.won, false, p.timeout)).join('');
   else el.innerHTML = '';
   sizeBoard();
 }
@@ -619,7 +657,7 @@ function hostRecv(c, d){
     hostBroadcastPlayers();
   }
 }
-const pick = d => ({results:d.results, done:d.done, won:d.won, n:d.n, time:d.time});
+const pick = d => ({results:d.results, done:d.done, won:d.won, n:d.n, time:d.time, timeout:!!d.timeout});
 function hostBroadcastPlayers(){
   broadcast({t:'players', players:NET.players});
   onPlayers();
@@ -637,7 +675,7 @@ function showLobby(){
   $('#roomCode').textContent = NET.code; $('#roomLink').value = link;
   $('#lobbyStart').hidden = !NET.host;
   $('#lobbyInfo').textContent = NET.host
-    ? `Ordet får ${settings.len} bokstaver og ${settings.tries} forsøk. Start når alle er med.`
+    ? `Ordet får ${settings.len} bokstaver og ${settings.tries} forsøk${settings.time ? `, og alle har ${settings.time} min` : ''}. Start når alle er med.`
     : 'Venter på at verten starter spillet …';
   renderLobby(); showScreen('lobby');
 }
@@ -653,20 +691,20 @@ $('#roomCopy').onclick = () => copy($('#roomLink').value);
 $('#lobbyStart').onclick = () => hostStartRound();
 function hostStartRound(){
   if(Object.keys(NET.players).length < 2 && !confirm('Du er alene i rommet. Starte likevel?')) return;
-  const g = {w:enc({w:randomWord(settings.len)}), tries:settings.tries, strict:settings.strict};
+  const g = {w:enc({w:randomWord(settings.len)}), tries:settings.tries, time:settings.time, strict:settings.strict};
   NET.game = g;
-  for(const p of Object.values(NET.players)) Object.assign(p, {results:[], done:false, won:false, n:0, time:0});
+  for(const p of Object.values(NET.players)) Object.assign(p, {results:[], done:false, won:false, n:0, time:0, timeout:false});
   broadcast({t:'start', g}); broadcast({t:'players', players:NET.players});
   beginOnline(g);
 }
 function beginOnline(g){
   const w = dec(g.w); if(!w) return;
   NET.game = g; NET.shownResults = false;
-  if(!NET.host) for(const p of Object.values(NET.players)) Object.assign(p, {results:[], done:false, won:false});
-  startGame({mode:'online', word:w.w, tries:g.tries, strict:g.strict, players:[settings.name || 'Du']});
+  if(!NET.host) for(const p of Object.values(NET.players)) Object.assign(p, {results:[], done:false, won:false, timeout:false});
+  startGame({mode:'online', word:w.w, tries:g.tries, time:+g.time || 0, strict:g.strict, players:[settings.name || 'Du']});
 }
 function netProgress(p){
-  const d = {results:p.results, done:p.done, won:p.won, n:p.guesses.length, time:p.time || 0};
+  const d = {results:p.results, done:p.done, won:p.won, n:p.guesses.length, time:p.time || 0, timeout:!!p.timeout};
   if(NET.host){ Object.assign(NET.players[NET.myId], d); hostBroadcastPlayers(); }
   else send(NET.conn, {t:'progress', ...d});
 }
@@ -675,7 +713,7 @@ function checkNetDone(){
   const list = Object.values(NET.players);
   if(!list.length || !list.every(p => p.done) || !curP().done) return;
   NET.shownResults = true; G.over = true;
-  setTimeout(() => endMulti(list.map(p => ({name:p.name, won:p.won, n:p.n || (p.results||[]).length, time:p.time}))), 900);
+  setTimeout(() => endMulti(list.map(p => ({name:p.name, won:p.won, n:p.n || (p.results||[]).length, time:p.time, timeout:p.timeout}))), 900);
 }
 
 /* ---------- Oppstart ---------- */
@@ -685,7 +723,7 @@ function boot(){
   if(k === 'u' && v){
     const d = dec(v);
     if(d && typeof d.w === 'string' && [...d.w].every(c => LETTER.test(c)))
-      return startGame({mode:'challenge', word:d.w, tries:Math.min(TMAX, Math.max(TMIN, +d.t || 6)), players:['Du']});
+      return startGame({mode:'challenge', word:d.w, tries:Math.min(TMAX, Math.max(TMIN, +d.t || 6)), time:Math.min(MMAX, Math.max(0, +d.m || 0)), players:['Du']});
     toast('Ugyldig utfordringslenke');
   } else if(k === 'rom' && v){
     $('#joinCode').value = v.toUpperCase();

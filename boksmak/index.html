@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Boksmak – finn din neste bok</title>
+<meta name="description" content="Beskriv hva du har lyst på, få tre bokforslag og hør eller les et ekte utdrag før du velger. Norske bøker og bøker i norsk oversettelse.">
+<style>
+:root{
+  --bg:#f6f2ec; --panel:#fffdf9; --text:#211c18; --muted:#6e645b; --line:#e2d9cd;
+  --accent:#9b3d2a; --accent-text:#ffffff; --chip:#efe6da; --soft:#f3ebe0;
+  --shadow:0 8px 30px rgba(60,40,20,.10);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#16130f; --panel:#201c17; --text:#f1ebe3; --muted:#a89d90; --line:#3a332b;
+    --accent:#e0866d; --accent-text:#1a120e; --chip:#2d2720; --soft:#2a241d;
+    --shadow:0 8px 30px rgba(0,0,0,.45);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#16130f; --panel:#201c17; --text:#f1ebe3; --muted:#a89d90; --line:#3a332b;
+  --accent:#e0866d; --accent-text:#1a120e; --chip:#2d2720; --soft:#2a241d;
+  --shadow:0 8px 30px rgba(0,0,0,.45);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5;-webkit-tap-highlight-color:transparent}
+button,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--accent)}
+.wrap{max-width:820px;margin:0 auto;padding:16px 16px 64px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0 20px}
+.logo{font-family:Georgia,"Times New Roman",serif;font-size:1.9rem;font-weight:700;letter-spacing:.01em;margin:0}
+.logo span{color:var(--accent)}
+.ghost{background:none;border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:.92rem}
+.ghost:hover{border-color:var(--accent)}
+.count{display:inline-block;min-width:1.4em;padding:0 .4em;border-radius:999px;background:var(--accent);color:var(--accent-text);font-size:.8rem;margin-left:4px}
+.lead{font-family:Georgia,serif;font-size:1.35rem;margin:0 0 6px}
+.sub{color:var(--muted);margin:0 0 18px}
+.ask{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:var(--shadow)}
+textarea{width:100%;min-height:84px;resize:vertical;border:none;background:transparent;outline:none;font-size:1.05rem}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ask .row{justify-content:space-between;border-top:1px solid var(--line);padding-top:10px;margin-top:6px}
+select{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:6px 8px}
+.primary{background:var(--accent);color:var(--accent-text);border:none;border-radius:12px;padding:10px 18px;font-weight:600}
+.primary:hover{filter:brightness(1.07)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px}
+.chip{background:var(--chip);border:none;border-radius:999px;padding:6px 12px;font-size:.9rem}
+.chip:hover{outline:1px solid var(--accent)}
+#results{margin-top:28px}
+.results-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:12px}
+.results-head h2{font-family:Georgia,serif;font-size:1.2rem;margin:0}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:8px;box-shadow:var(--shadow)}
+.card .meta{color:var(--muted);font-size:.85rem}
+.card h3{font-family:Georgia,serif;font-size:1.25rem;margin:0;line-height:1.25}
+.card .author{margin:0;font-weight:500}
+.card .mood{margin:0;font-size:.95rem}
+.why{font-size:.8rem;color:var(--muted)}
+.badge{display:inline-block;font-size:.75rem;padding:1px 8px;border-radius:999px;background:var(--chip);margin-right:4px}
+.actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;padding-top:6px}
+.actions button,.actions a{border:1px solid var(--line);background:var(--soft);border-radius:10px;padding:7px 10px;font-size:.88rem;text-decoration:none;color:var(--text)}
+.actions .pick{background:var(--accent);color:var(--accent-text);border-color:transparent}
+.actions .pick[aria-pressed="true"]{background:transparent;color:var(--accent);border-color:var(--accent)}
+.empty{color:var(--muted)}
+dialog{border:none;border-radius:18px;padding:0;max-width:min(640px,calc(100vw - 32px));width:100%;background:var(--panel);color:var(--text);box-shadow:var(--shadow)}
+dialog::backdrop{background:rgba(20,14,8,.5)}
+.dlg{padding:20px}
+.dlg-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.dlg-head h2{font-family:Georgia,serif;margin:0;font-size:1.3rem}
+.close{background:none;border:none;font-size:1.5rem;line-height:1;padding:0 4px}
+.excerpt{font-family:Georgia,"Times New Roman",serif;font-size:1.08rem;line-height:1.7;white-space:pre-line;background:var(--soft);border-radius:12px;padding:16px;margin:14px 0;max-height:50vh;overflow:auto}
+.excerpt mark{background:color-mix(in srgb,var(--accent) 30%,transparent);color:inherit;border-radius:3px}
+.source{font-size:.82rem;color:var(--muted);margin:0 0 12px}
+.list{list-style:none;padding:0;margin:12px 0 0;display:flex;flex-direction:column;gap:8px}
+.list li{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--soft);border-radius:10px;padding:8px 12px}
+.list button{background:none;border:none;color:var(--muted)}
+footer{margin-top:48px;color:var(--muted);font-size:.85rem}
+@media (max-width:480px){.logo{font-size:1.6rem}.lead{font-size:1.2rem}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1 class="logo">Bok<span>smak</span></h1>
+    <button class="ghost" id="listBtn" type="button">Min liste <span class="count" id="listCount">0</span></button>
+  </header>
+
+  <p class="lead">Smak på boken før du velger den.</p>
+  <p class="sub">Beskriv hva du har lyst til å lese, så får du tre forslag. Hør eller les et ekte utdrag før du bestemmer deg.</p>
+
+  <form class="ask" id="askForm">
+    <label for="q" class="sr" style="position:absolute;left:-9999px">Hva har du lyst på?</label>
+    <textarea id="q" placeholder="F.eks. «noe kort og vemodig om kjærlighet» eller «en spennende krim»"></textarea>
+    <div class="row">
+      <div class="row">
+        <select id="lang" aria-label="Språk">
+          <option value="alle">Norsk og oversatt</option>
+          <option value="norsk">Bare norsk</option>
+          <option value="oversatt">Bare oversatt</option>
+        </select>
+        <select id="len" aria-label="Lengde">
+          <option value="alle">Alle lengder</option>
+          <option value="kort">Kort</option>
+          <option value="middels">Middels</option>
+          <option value="lang">Lang</option>
+        </select>
+      </div>
+      <button class="primary" type="submit">Gi meg tre forslag</button>
+    </div>
+  </form>
+
+  <div class="chips" id="chips"></div>
+
+  <section id="results" aria-live="polite"></section>
+
+  <footer>
+    Utdrag vises bare fra bøker som er falt i det fri. For vernede bøker lenker Boksmak til Nasjonalbiblioteket.
+  </footer>
+</div>
+
+<dialog id="exDlg">
+  <div class="dlg">
+    <div class="dlg-head">
+      <div>
+        <h2 id="exTitle"></h2>
+        <div id="exMeta" style="color:var(--muted);font-size:.9rem"></div>
+      </div>
+      <button class="close" type="button" data-close aria-label="Lukk">×</button>
+    </div>
+    <div class="excerpt" id="exText"></div>
+    <p class="source" id="exSource"></p>
+    <div class="actions" id="exActions"></div>
+  </div>
+</dialog>
+
+<dialog id="listDlg">
+  <div class="dlg">
+    <div class="dlg-head">
+      <h2>Min liste</h2>
+      <button class="close" type="button" data-close aria-label="Lukk">×</button>
+    </div>
+    <ul class="list" id="listItems"></ul>
+  </div>
+</dialog>
+
+<script src="katalog.js"></script>
+<script>
+(() => {
+  const BOOKS = window.KATALOG;
+  const $ = (s) => document.querySelector(s);
+  const esc = (s) => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  // ——— Lagring ———
+  const KEY = 'boksmak.liste';
+  let liste = [];
+  try { liste = JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) {}
+  const lagre = () => { try { localStorage.setItem(KEY, JSON.stringify(liste)); } catch (e) {} };
+
+  // ——— Matching ———
+  const STOPP = new Set('noe noen som med det den de en et ei jeg meg har lyst til og i om er vil gjerne bok bøker roman litt kan ikke men for av på å fra så eller helst skal lese les ha mye kanskje mer være hva handler'.split(' '));
+  const SYNONYMER = {
+    spennende: ['spenning', 'krim', 'thriller'], spenning: ['krim', 'thriller'],
+    krim: ['krim', 'detektiv', 'drap', 'politi'], mord: ['drap', 'krim'],
+    morsom: ['humor', 'morsom', 'satire'], morsomt: ['humor', 'morsom'], humor: ['humor', 'morsom'], lattermild: ['humor'],
+    trist: ['trist', 'vemodig', 'sorg', 'sår'], vemodig: ['vemodig', 'trist'], sørgelig: ['sorg', 'trist'],
+    kjærlighet: ['kjærlighet', 'romantikk'], romantisk: ['romantikk', 'kjærlighet'], forelsket: ['kjærlighet'],
+    natur: ['natur', 'skog', 'villmark'], skogen: ['skog'], fjell: ['natur', 'villmark'],
+    gammel: ['klassiker'], klassisk: ['klassiker'], klassikere: ['klassiker'],
+    ny: ['moderne'], nyere: ['moderne'], samtid: ['moderne'],
+    rolig: ['rolig', 'stille'], stille: ['stille', 'rolig'], koselig: ['feelgood', 'varm'], hyggelig: ['feelgood', 'varm'],
+    mørk: ['mørk', 'intens'], dyster: ['mørk'], intens: ['intens'],
+    fantasy: ['fantasi', 'magisk'], magi: ['magisk'], eventyr: ['eventyr', 'fantasi'],
+    framtid: ['fremtid', 'dystopi'], scifi: ['science fiction', 'dystopi'],
+    tenke: ['filosofi', 'tankevekkende'], filosofisk: ['filosofi'],
+    historie: ['historisk'], middelalderen: ['middelalder'],
+    teater: ['skuespill', 'drama'], skuespill: ['skuespill', 'drama'],
+    venner: ['vennskap'], venninner: ['vennskap'], familien: ['familie'],
+    vinteren: ['vinter'], sommeren: ['sommer'], byen: ['by'],
+    lett: ['lett', 'feelgood'], tung: ['intens', 'mørk'],
+    rar: ['rar', 'absurd', 'underlig'], absurd: ['absurd']
+  };
+  const LENGDEORD = { kort: 'kort', korte: 'kort', kjapp: 'kort', rask: 'kort', lang: 'lang', lange: 'lang', tykk: 'lang', murstein: 'lang' };
+
+  const ord = (t) => t.toLowerCase().replace(/[^a-zæøåäöüé0-9\s-]/g, ' ').split(/\s+/).filter(Boolean);
+  const likner = (a, b) => {
+    if (a === b) return 3;
+    const min = Math.min(a.length, b.length);
+    if (min >= 4 && (a.startsWith(b) || b.startsWith(a))) return 2;
+    let i = 0; while (i < min && a[i] === b[i]) i++;
+    return i >= 5 ? 1.5 : 0;
+  };
+
+  function score(bok, termer, lengdeOnske) {
+    let s = 0; const treff = new Set();
+    const tagOrd = bok.tags.flatMap(t => ord(t));
+    const fritekst = ord(`${bok.tittel} ${bok.forfatter} ${bok.sjanger} ${bok.stemning} ${bok.oversattFra || ''}`);
+    for (const { ord: t, vekt } of termer) {
+      let best = 0, bestOrd = null;
+      for (const tag of tagOrd) { const v = likner(t, tag); if (v > best) { best = v; bestOrd = tag; } }
+      if (best) { s += best * vekt; treff.add(bestOrd); continue; }
+      for (const w of fritekst) { if (w.length > 3 && likner(t, w) >= 2) { s += 1 * vekt; treff.add(w); break; } }
+    }
+    if (lengdeOnske && bok.lengde === lengdeOnske) { s += 2; treff.add(lengdeOnske); }
+    return { s, treff: [...treff] };
+  }
+
+  function finn(tekst, spraak, lengde) {
+    const rå = ord(tekst);
+    let lengdeOnske = lengde !== 'alle' ? lengde : null;
+    const termer = [];
+    for (const w of rå) {
+      if (LENGDEORD[w]) { lengdeOnske = lengdeOnske || LENGDEORD[w]; continue; }
+      if (w === 'norsk' || w === 'norske') { if (spraak === 'alle') spraak = 'norsk'; continue; }
+      if (w.startsWith('oversat')) { if (spraak === 'alle') spraak = 'oversatt'; continue; }
+      if (STOPP.has(w) || w.length < 3) continue;
+      termer.push({ ord: w, vekt: 1 });
+      for (const syn of (SYNONYMER[w] || [])) termer.push({ ord: syn, vekt: 0.8 });
+    }
+    let utvalg = BOOKS.filter(b => spraak === 'alle' || b.spraak === spraak);
+    if (lengde !== 'alle') utvalg = utvalg.filter(b => b.lengde === lengde);
+    return utvalg
+      .map(b => ({ bok: b, ...score(b, termer, lengdeOnske), r: Math.random() }))
+      .sort((a, b) => (b.s - a.s) || (a.r - b.r));
+  }
+
+  // ——— Visning ———
+  let rangert = [], side = 0;
+
+  function nbLenke(b) {
+    return 'https://www.nb.no/search?q=' + encodeURIComponent(`${b.tittel} ${b.forfatter}`);
+  }
+
+  function kort(x) {
+    const b = x.bok;
+    const valgt = liste.includes(b.id);
+    const spraak = b.spraak === 'norsk' ? 'Norsk' : `Oversatt fra ${b.oversattFra}`;
+    const hvorfor = x.s > 0 && x.treff.length ? `<div class="why">Treff på: ${x.treff.slice(0, 4).map(esc).join(', ')}</div>` : '';
+    const utdragKnapper = b.utdrag
+      ? `<button type="button" data-les="${b.id}">📖 Les utdrag</button><button type="button" data-hor="${b.id}">🎧 Hør utdrag</button>`
+      : `<a href="${nbLenke(b)}" target="_blank" rel="noopener">📖 Utdrag hos Nasjonalbiblioteket ↗</a>`;
+    return `<article class="card">
+      <div class="meta"><span class="badge">${esc(b.sjanger)}</span><span class="badge">${esc(b.lengde)}</span> ${b.aar}</div>
+      <h3>${esc(b.tittel)}</h3>
+      <p class="author">${esc(b.forfatter)}</p>
+      <p class="mood">${esc(b.stemning)}</p>
+      <div class="meta">${esc(spraak)}</div>
+      ${hvorfor}
+      <div class="actions">
+        ${utdragKnapper}
+        <button type="button" class="pick" data-velg="${b.id}" aria-pressed="${valgt}">${valgt ? '✓ På listen' : 'Velg denne'}</button>
+      </div>
+    </article>`;
+  }
+
+  function vis() {
+    const r = $('#results');
+    if (!rangert.length) { r.innerHTML = '<p class="empty">Fant ingen bøker med de filtrene. Prøv å endre språk eller lengde.</p>'; return; }
+    const tre = rangert.slice(side * 3, side * 3 + 3);
+    const flere = rangert.length > 3;
+    const ingenTreff = rangert[0].s === 0;
+    r.innerHTML = `<div class="results-head">
+        <h2>${ingenTreff ? 'Tre forslag å smake på' : 'Tre forslag til deg'}</h2>
+        ${flere ? '<button class="ghost" type="button" id="nye">Tre nye forslag</button>' : ''}
+      </div>
+      ${ingenTreff && $('#q').value.trim() ? '<p class="empty">Fant ingen tydelige treff, så her er et tilfeldig utvalg.</p>' : ''}
+      <div class="cards">${tre.map(kort).join('')}</div>`;
+  }
+
+  function sok(tekst) {
+    rangert = finn(tekst, $('#lang').value, $('#len').value);
+    side = 0; vis();
+    $('#results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // ——— Utdrag og opplesning ———
+  const tale = 'speechSynthesis' in window ? window.speechSynthesis : null;
+  let aktiv = null;
+
+  function stemme() {
+    if (!tale) return null;
+    const v = tale.getVoices();
+    return v.find(x => /^(nb|no)/i.test(x.lang)) || v.find(x => /^nn/i.test(x.lang)) || v.find(x => /^(da|sv)/i.test(x.lang)) || null;
+  }
+
+  function stopp() {
+    if (tale) tale.cancel();
+    aktiv = null;
+    const t = $('#exText'); if (t.dataset.raw) t.textContent = t.dataset.raw;
+    oppdaterAvspill();
+  }
+
+  function oppdaterAvspill() {
+    const knapp = $('#exPlay');
+    if (knapp) knapp.textContent = aktiv ? (tale.paused ? '▶︎ Fortsett' : '⏸ Pause') : '🎧 Les høyt';
+  }
+
+  function spill(b) {
+    if (!tale) { alert('Nettleseren din støtter ikke opplesning.'); return; }
+    if (aktiv) { tale.paused ? tale.resume() : tale.pause(); setTimeout(oppdaterAvspill, 50); return; }
+    const tekst = b.utdrag.tekst;
+    const u = new SpeechSynthesisUtterance(tekst.replace(/\s*\.\s*\.\s*\.\s*\./g, '…'));
+    const v = stemme(); if (v) u.voice = v;
+    u.lang = v ? v.lang : 'nb-NO';
+    u.rate = 0.92;
+    const el = $('#exText');
+    el.dataset.raw = tekst;
+    u.onboundary = (e) => {
+      if (e.name && e.name !== 'word') return;
+      const i = e.charIndex; if (i >= tekst.length) return;
+      let j = i; while (j < tekst.length && !/\s/.test(tekst[j])) j++;
+      el.innerHTML = esc(tekst.slice(0, i)) + '<mark>' + esc(tekst.slice(i, j)) + '</mark>' + esc(tekst.slice(j));
+    };
+    u.onend = u.onerror = () => { aktiv = null; el.textContent = tekst; oppdaterAvspill(); };
+    aktiv = u; tale.cancel(); tale.speak(u); oppdaterAvspill();
+  }
+
+  function aapneUtdrag(id, lesHoyt) {
+    const b = BOOKS.find(x => x.id === id); if (!b || !b.utdrag) return;
+    stopp();
+    $('#exTitle').textContent = b.tittel;
+    $('#exMeta').textContent = `${b.forfatter} · ${b.aar}`;
+    const t = $('#exText'); t.textContent = b.utdrag.tekst; t.dataset.raw = b.utdrag.tekst;
+    $('#exSource').textContent = 'Kilde: ' + b.utdrag.kilde;
+    const valgt = liste.includes(b.id);
+    $('#exActions').innerHTML = `
+      ${tale ? '<button type="button" id="exPlay">🎧 Les høyt</button><button type="button" id="exStop">⏹ Stopp</button>' : ''}
+      <a href="${nbLenke(b)}" target="_blank" rel="noopener">Les mer hos Nasjonalbiblioteket ↗</a>
+      <button type="button" class="pick" data-velg="${b.id}" aria-pressed="${valgt}">${valgt ? '✓ På listen' : 'Velg denne'}</button>`;
+    if (tale) {
+      $('#exPlay').onclick = () => spill(b);
+      $('#exStop').onclick = stopp;
+    }
+    $('#exDlg').showModal();
+    if (lesHoyt) spill(b);
+  }
+
+  // ——— Liste ———
+  function oppdaterListe() {
+    $('#listCount').textContent = liste.length;
+    const ul = $('#listItems');
+    ul.innerHTML = liste.length
+      ? liste.map(id => BOOKS.find(b => b.id === id)).filter(Boolean)
+          .map(b => `<li><span><strong>${esc(b.tittel)}</strong> – ${esc(b.forfatter)}</span><button type="button" data-fjern="${b.id}" aria-label="Fjern">Fjern</button></li>`).join('')
+      : '<li class="empty">Ingen bøker ennå. Velg en bok du har smakt på.</li>';
+  }
+
+  function veksle(id) {
+    liste = liste.includes(id) ? liste.filter(x => x !== id) : [...liste, id];
+    lagre(); oppdaterListe();
+    document.querySelectorAll(`[data-velg="${id}"]`).forEach(k => {
+      const v = liste.includes(id);
+      k.setAttribute('aria-pressed', v); k.textContent = v ? '✓ På listen' : 'Velg denne';
+    });
+  }
+
+  // ——— Hendelser ———
+  const EKSEMPLER = ['Noe kort og vemodig om kjærlighet', 'En spennende krim', 'Klassiker med mye natur', 'Morsom og lett', 'Tankevekkende dystopi', 'Lang historisk roman'];
+  $('#chips').innerHTML = EKSEMPLER.map(e => `<button class="chip" type="button">${esc(e)}</button>`).join('');
+  $('#chips').addEventListener('click', e => {
+    const c = e.target.closest('.chip'); if (!c) return;
+    $('#q').value = c.textContent; sok(c.textContent);
+  });
+
+  $('#askForm').addEventListener('submit', e => { e.preventDefault(); sok($('#q').value); });
+  $('#q').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sok($('#q').value); } });
+
+  document.addEventListener('click', e => {
+    const t = e.target.closest('button'); if (!t) return;
+    if (t.id === 'nye') { side = (side + 1) % Math.ceil(rangert.length / 3); vis(); }
+    else if (t.dataset.les) aapneUtdrag(t.dataset.les, false);
+    else if (t.dataset.hor) aapneUtdrag(t.dataset.hor, true);
+    else if (t.dataset.velg) veksle(t.dataset.velg);
+    else if (t.dataset.fjern) veksle(t.dataset.fjern);
+    else if (t.hasAttribute('data-close')) t.closest('dialog').close();
+  });
+
+  $('#exDlg').addEventListener('close', stopp);
+  $('#listBtn').addEventListener('click', () => { oppdaterListe(); $('#listDlg').showModal(); });
+  document.querySelectorAll('dialog').forEach(d => d.addEventListener('click', e => { if (e.target === d) d.close(); }));
+  if (tale) tale.onvoiceschanged = () => {};
+
+  oppdaterListe();
+})();
+</script>
+</body>
+</html>

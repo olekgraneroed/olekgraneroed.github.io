@@ -1,0 +1,1134 @@
+<!doctype html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<title>Samme Tanke</title>
+<meta name="description" content="Svar det du tror de andre svarer. Jo flere som tenker som deg, desto flere poeng får du. Et norsk festspill for 2–8 venner.">
+<meta property="og:title" content="Samme Tanke">
+<meta property="og:description" content="Svar det du tror de andre svarer. Jo flere som tenker som deg, desto flere poeng får du.">
+<style>
+:root{
+  --bg:#f7f7f5; --panel:#ffffff; --text:#1d1d1f; --muted:#6b6b70; --line:#d4d4d8;
+  --correct:#3a9d5d; --present:#c9a227; --absent:#7a7a80; --accent:#2f6fde; --danger:#c0392b;
+  --shadow:0 6px 30px rgba(0,0,0,.12);
+  --g0:#3a9d5d; --g1:#2f6fde; --g2:#8e44ad; --g3:#d35400; --g4:#c9a227; --g5:#16a085;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121214; --panel:#1c1c1f; --text:#f2f2f3; --muted:#9a9aa2; --line:#33333a;
+    --correct:#3f9e5f; --present:#b8962a; --absent:#3a3a3f; --accent:#5b8ff0; --danger:#e05a4a;
+    --shadow:0 6px 30px rgba(0,0,0,.5);
+    --g0:#4fb873; --g1:#5b8ff0; --g2:#b071d1; --g3:#ea7a33; --g4:#d4ac38; --g5:#2fbf9f;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121214; --panel:#1c1c1f; --text:#f2f2f3; --muted:#9a9aa2; --line:#33333a;
+  --correct:#3f9e5f; --present:#b8962a; --absent:#3a3a3f; --accent:#5b8ff0; --danger:#e05a4a;
+  --shadow:0 6px 30px rgba(0,0,0,.5);
+  --g0:#4fb873; --g1:#5b8ff0; --g2:#b071d1; --g3:#ea7a33; --g4:#d4ac38; --g5:#2fbf9f;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent;overflow:hidden}
+button{font:inherit;color:inherit;cursor:pointer}
+input{font:inherit;color:var(--text)}
+.app{display:flex;flex-direction:column;height:var(--vvh,100dvh);max-width:760px;margin:0 auto}
+header{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid var(--line);flex:none}
+header h1{margin:0;font-size:1.35rem;letter-spacing:.06em;font-weight:800;white-space:nowrap}
+header h1 span{color:var(--correct)}
+header a{color:inherit;text-decoration:none}
+.iconbtn{background:none;border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:.95rem}
+.hdr-left,.hdr-right{display:flex;gap:6px;min-width:90px}
+.hdr-right{justify-content:flex-end}
+.screen{display:none;flex:1;min-height:0}
+.screen.on{display:flex}
+.scroll{flex-direction:column;overflow-y:auto;padding:16px;gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.card h2{margin:0 0 10px;font-size:1.05rem}
+.card p{margin:0 0 10px;color:var(--muted);font-size:.92rem;line-height:1.4}
+.btn{border:none;border-radius:10px;padding:11px 16px;background:var(--accent);color:#fff;font-weight:650;font-size:1rem}
+.btn.sec{background:var(--bg);color:var(--text);border:1px solid var(--line)}
+.btn.green{background:var(--correct)}
+.btn.big{padding:14px 18px;font-size:1.1rem}
+.btn:disabled{opacity:.5;cursor:default}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.btns .btn{flex:1 1 140px}
+.txt{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);font-size:1rem}
+.small{font-size:.85rem;color:var(--muted)}
+.linkbox{display:flex;gap:6px;margin-top:10px}
+.linkbox input{flex:1;min-width:0}
+.hide{display:none!important}
+
+/* Start */
+.hero{text-align:center;padding:10px 6px 0}
+.hero .big{font-size:clamp(1.25rem,5vw,1.6rem);font-weight:800;line-height:1.25;margin:0 0 6px}
+.hero p{color:var(--muted);margin:0}
+.steps{margin:0;padding-left:20px;color:var(--muted);font-size:.92rem;line-height:1.5}
+.joinhi{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
+
+/* Lobby */
+.code{font-size:2.2rem;font-weight:800;letter-spacing:.25em;text-align:center;font-family:ui-monospace,monospace}
+.players{list-style:none;margin:0;padding:0}
+.players li{padding:8px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.players li:last-child{border-bottom:none}
+.who-row{display:flex;align-items:center;gap:8px;min-width:0}
+.av{flex:none;width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:.85rem;background:hsl(var(--h) 55% 45%)}
+.off{opacity:.45}
+
+/* Spill */
+#play{flex-direction:column}
+.bar{flex:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 16px 4px}
+.bar .rnd{font-weight:700;font-size:.95rem}
+.bar .ph{color:var(--muted);font-size:.85rem;text-align:center;flex:1}
+.clock{min-width:52px;text-align:center;font-variant-numeric:tabular-nums;font-weight:800;font-size:1.15rem;border-radius:999px;padding:3px 10px;background:var(--panel);border:1px solid var(--line)}
+.clock.low{color:#fff;background:var(--danger);border-color:var(--danger);animation:pulse 1s infinite}
+.clock:empty{visibility:hidden}
+@keyframes pulse{50%{transform:scale(1.08)}}
+.prog{flex:none;height:4px;margin:0 16px;background:var(--line);border-radius:2px;overflow:hidden}
+.prog i{display:block;height:100%;width:100%;background:var(--accent);transform-origin:left;transition:transform .2s linear}
+.prog.low i{background:var(--danger)}
+.chips{flex:none;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;padding:8px 12px 0}
+.chips:empty{display:none}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px 3px 3px;border-radius:999px;border:1px solid var(--line);background:var(--panel);font-size:.82rem;max-width:150px}
+.chip .av{width:22px;height:22px;font-size:.72rem}
+.chip .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip .ck{font-weight:800;color:var(--muted)}
+.chip.done{border-color:var(--correct)}
+.chip.done .ck{color:var(--correct)}
+.chip.me .nm{font-weight:700}
+.net{flex:none;text-align:center;font-size:.85rem;padding:6px;background:var(--present);color:#fff;font-weight:650}
+.net:empty{display:none}
+.stage{flex:1;min-height:0;overflow-y:auto;padding:12px 16px calc(16px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:14px}
+
+/* Spørsmålsfasen */
+.qbox{flex:1;display:flex;flex-direction:column;justify-content:center;text-align:center;gap:10px;min-height:120px}
+.q{margin:0;font-size:clamp(1.45rem,6.2vw,2.35rem);line-height:1.2;font-weight:800;letter-spacing:-.01em;overflow-wrap:anywhere}
+.hint{margin:0;color:var(--muted);font-size:.9rem}
+.ansform{flex:none;display:flex;gap:8px}
+.ansform input{flex:1;min-width:0;font-size:1.15rem;padding:14px 14px;border-radius:12px;border:2px solid var(--line);background:var(--panel)}
+.ansform input:focus{outline:none;border-color:var(--accent)}
+.ansform .btn{flex:none;min-width:96px;font-size:1.1rem;border-radius:12px}
+.lockbox{flex:none;text-align:center;padding:14px;border-radius:14px;background:var(--panel);border:2px solid var(--correct)}
+.lockbox b{display:block;font-size:1.4rem;margin-top:2px;overflow-wrap:anywhere}
+.lockbox.miss{border-color:var(--danger)}
+.wait{text-align:center;color:var(--muted);font-size:.9rem;margin:0}
+.qsmall{text-align:center;font-weight:700;font-size:1.05rem;color:var(--muted);margin:0;line-height:1.3}
+
+/* Avsløring */
+.banner{text-align:center;padding:12px 14px;border-radius:14px;background:var(--panel);border:1px solid var(--line);font-weight:650;line-height:1.35}
+.banner.good{border:2px solid var(--correct)}
+.banner .sub{display:block;font-weight:400;color:var(--muted);font-size:.9rem;margin-top:2px}
+.klaff{text-align:center;padding:16px;border-radius:16px;background:var(--correct);color:#fff;animation:boom .7s cubic-bezier(.2,1.6,.4,1) both}
+.klaff b{display:block;font-size:2.2rem;letter-spacing:.03em}
+@keyframes boom{0%{transform:scale(.4);opacity:0}100%{transform:none;opacity:1}}
+.cards{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.fcard{width:calc(50% - 5px);max-width:168px;height:104px;perspective:900px}
+.fin{position:relative;width:100%;height:100%;transition:transform .55s cubic-bezier(.3,.7,.3,1.2);transform-style:preserve-3d}
+.fcard.flipped .fin{transform:rotateY(180deg)}
+.fside{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:8px 10px;text-align:center}
+.fback{background:var(--accent);color:#fff}
+.fback .qm{font-size:1.8rem;font-weight:800;opacity:.85}
+.ffront{transform:rotateY(180deg);background:var(--panel);border:2px solid var(--line)}
+.fside .who{font-size:.8rem;font-weight:700;opacity:.85;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ffront .at{font-size:1.15rem;font-weight:800;line-height:1.15;overflow-wrap:anywhere}
+.ffront .at.none{font-size:.9rem;font-weight:600;color:var(--muted);font-style:italic}
+.fcard.me .fside{box-shadow:0 0 0 3px var(--text)}
+.groups{display:flex;flex-direction:column;gap:10px}
+.grp{--gc:var(--line);border-radius:16px;padding:10px 12px 12px;border:2px solid var(--gc);background:var(--panel);background:color-mix(in srgb,var(--gc) 13%,var(--panel))}
+.grp.mine{box-shadow:0 0 0 2px var(--text)}
+.ghead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.gtext{font-size:1.35rem;font-weight:800;overflow-wrap:anywhere}
+.gtag{font-weight:750;font-size:.9rem;color:var(--gc);white-space:nowrap}
+.grp.solo{--gc:var(--absent)}
+.grp.solo .gtag{color:var(--muted)}
+.grp.miss{--gc:var(--line);border-style:dashed;background:transparent}
+.grp.miss .gtext{font-size:1rem;font-style:italic;color:var(--muted)}
+.gbody{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.fcard.small{width:auto;max-width:none;height:auto;perspective:none}
+.fcard.small .fin{transform:none;transition:none}
+.fcard.small .fback{display:none}
+.fcard.small .ffront{position:static;transform:none;flex-direction:row;padding:5px 10px;border-radius:999px;border-width:1px;gap:6px}
+.fcard.small .who{font-size:.9rem;opacity:1}
+.fcard.small .at{font-size:.82rem;font-weight:500;color:var(--muted)}
+.fcard.small.me .fside{box-shadow:0 0 0 2px var(--text)}
+.fly{transition:transform .65s cubic-bezier(.3,.8,.3,1)}
+.after{display:flex;flex-direction:column;gap:12px}
+.countline{text-align:center;font-weight:650}
+.countline b{font-variant-numeric:tabular-nums}
+
+/* Omkamp */
+.rmhead{text-align:center}
+.rmhead h2{margin:0;font-size:clamp(1.6rem,7vw,2.3rem);font-weight:800}
+.rmhead p{margin:4px 0 0;color:var(--muted);font-size:.92rem}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.opt{position:relative;min-height:84px;border-radius:16px;border:2px solid var(--line);background:var(--panel);padding:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;transition:transform .1s}
+.opt:active{transform:scale(.97)}
+.opt b{font-size:1.3rem;font-weight:800;overflow-wrap:anywhere}
+.opt small{color:var(--muted);font-size:.78rem}
+.opt .yours{position:absolute;top:6px;right:8px;font-size:.7rem;font-weight:700;color:var(--accent)}
+.opt.chosen{border-color:var(--accent);background:var(--accent);color:#fff}
+.opt.chosen small,.opt.chosen .yours{color:#fff}
+.opt:disabled{cursor:default}
+.opts.locked .opt:not(.chosen){opacity:.45}
+
+/* Omkamp-resultat */
+.verdict{text-align:center;padding:14px;border-radius:16px;font-weight:800;font-size:1.25rem;animation:boom .6s cubic-bezier(.2,1.5,.4,1) both}
+.verdict .sub{display:block;font-size:.9rem;font-weight:500;margin-top:2px}
+.verdict.ok{background:var(--correct);color:#fff}
+.verdict.no{background:var(--panel);border:2px solid var(--line)}
+.swap{text-align:center;padding:12px;border-radius:14px;border:2px solid var(--g3);background:color-mix(in srgb,var(--g3) 14%,var(--panel));font-weight:750;animation:boom .6s .25s cubic-bezier(.2,1.5,.4,1) both}
+.swap .sub{display:block;font-weight:500;font-size:.9rem;margin-top:2px}
+.moves{display:flex;flex-direction:column;gap:6px}
+.mv{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:12px;background:var(--panel);border:1px solid var(--line);animation:rise .4s both}
+.mv .nm{font-weight:700;flex:none;max-width:38%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mv .path{flex:1;min-width:0;overflow-wrap:anywhere}
+.mv .tag{flex:none;font-size:.72rem;font-weight:800;padding:2px 7px;border-radius:999px;background:var(--line);color:var(--text)}
+.mv.sw{border:2px solid var(--g3)}
+.mv.sw .tag{background:var(--g3);color:#fff}
+.mv.me{box-shadow:0 0 0 2px var(--text)}
+.mv .arrow{color:var(--g3);font-weight:800;padding:0 2px}
+@keyframes rise{0%{opacity:0;transform:translateY(8px)}100%{opacity:1;transform:none}}
+
+/* Poengtabell */
+.rank{width:100%;border-collapse:collapse}
+.rank td{padding:8px 4px;border-bottom:1px solid var(--line);vertical-align:middle}
+.rank tr:last-child td{border-bottom:none}
+.rank td.pl{width:34px;font-weight:800;text-align:center}
+.rank td.pts{text-align:right;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+.rank td.plus{text-align:right;color:var(--correct);font-weight:700;width:52px;font-variant-numeric:tabular-nums}
+.rank tr.me td{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.rank .buddy{display:block;font-size:.78rem;color:var(--muted);font-weight:400}
+.final-title{text-align:center;margin:0;font-size:clamp(1.6rem,7vw,2.3rem);font-weight:800}
+
+/* Toast og modal */
+.toasts{position:fixed;top:30%;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:6px;z-index:50;pointer-events:none}
+.toast{background:var(--text);color:var(--bg);padding:10px 16px;border-radius:8px;font-weight:650;box-shadow:var(--shadow);animation:fade 2.6s forwards;text-align:center}
+@keyframes fade{0%{opacity:0;transform:translateY(-6px)}8%{opacity:1;transform:none}85%{opacity:1}100%{opacity:0}}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;padding:16px;z-index:40}
+.modal.on{display:flex}
+.modal .box{background:var(--panel);border-radius:16px;padding:20px;max-width:440px;width:100%;box-shadow:var(--shadow);max-height:90dvh;overflow-y:auto}
+.modal h2{margin:0 0 10px}
+.modal p{line-height:1.45}
+/* Lav synlig høyde (typisk med skjermtastaturet oppe): gi plass til spørsmål og svarfelt. */
+.short header{padding:4px 12px}
+.short .bar{padding:4px 12px 2px}
+.short .chips{flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;padding:6px 12px 0}
+.short .chip{flex:none}
+.short .stage{padding-top:8px;gap:8px}
+.short .qbox{min-height:0;justify-content:flex-end}
+.short .q{font-size:clamp(1.15rem,5vw,1.6rem)}
+.short .hint{display:none}
+.btn.nudge{animation:pulse .8s infinite}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="hdr-left"><button class="iconbtn" id="homeBtn" title="Forlat rommet" hidden>‹ Forlat</button><a class="iconbtn" id="siteBtn" href="../" title="Alle spill">‹ Spill</a></div>
+    <h1>SAMME <span>TANKE</span></h1>
+    <div class="hdr-right"><button class="iconbtn" id="helpBtn" title="Hvordan spille">?</button></div>
+  </header>
+  <div class="net" id="net"></div>
+
+  <!-- START -->
+  <section class="screen scroll on" id="start">
+    <div class="hero">
+      <p class="big">Svar det du tror de andre svarer.</p>
+      <p>Jo flere som tenker som deg, desto flere poeng får du.</p>
+    </div>
+    <div class="card" id="joinCard" hidden>
+      <h2>Bli med i rom <span id="joinCodeLbl"></span></h2>
+      <input class="txt" id="nameJ" placeholder="Ditt navn" maxlength="16" autocomplete="nickname" enterkeyhint="go" style="margin-bottom:8px">
+      <div class="btns"><button class="btn green big" id="joinLinkBtn">Bli med</button></div>
+    </div>
+    <div class="card" id="hostCard">
+      <h2>Lag et rom</h2>
+      <p>Del lenken med gjengen på Discord. 2–8 spillere, fem korte runder.</p>
+      <input class="txt" id="nameH" placeholder="Ditt navn" maxlength="16" autocomplete="nickname" enterkeyhint="go" style="margin-bottom:8px">
+      <div class="btns"><button class="btn green big" id="hostBtn">Lag rom</button></div>
+    </div>
+    <div class="card">
+      <h2>Har du en romkode?</h2>
+      <div class="linkbox" style="margin-top:0"><input class="txt" id="codeIn" placeholder="Romkode" maxlength="5" autocomplete="off" style="text-transform:uppercase"><button class="btn sec" id="joinBtn">Bli med</button></div>
+    </div>
+    <div class="card">
+      <h2>Slik spiller du</h2>
+      <ol class="steps">
+        <li>Alle får samme spørsmål og 20 sekunder på å låse ett kort svar.</li>
+        <li>Svarene snus. Du får ett poeng for hver annen spiller som skrev det samme.</li>
+        <li>Svarte alle likt? <b>Full klaff</b> – ett ekstra poeng til alle.</li>
+        <li>Ellers: <b>Tenk én gang til.</b> Velg blant svarene. Blir alle enige, får alle ett bonuspoeng.</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- LOBBY -->
+  <section class="screen scroll" id="lobby">
+    <div class="card" style="text-align:center">
+      <p style="margin-bottom:4px">Romkode</p>
+      <div class="code" id="roomCode">-----</div>
+      <div class="linkbox"><input class="txt" id="roomLink" readonly><button class="btn sec" id="roomCopy">Kopier</button></div>
+      <p class="small" style="margin:8px 0 0">Send lenken i gruppechatten. Den som åpner den, skriver navnet sitt og er med.</p>
+    </div>
+    <div class="card">
+      <h2>Spillere <span class="small" id="lobbyCount"></span></h2>
+      <ul class="players" id="lobbyPlayers"></ul>
+    </div>
+    <div class="card">
+      <p id="lobbyInfo"></p>
+      <div class="btns"><button class="btn green big" id="lobbyStart" hidden>Start spillet</button></div>
+    </div>
+  </section>
+
+  <!-- SPILL -->
+  <section class="screen" id="play">
+    <div class="bar"><span class="rnd" id="rnd"></span><span class="ph" id="ph"></span><span class="clock" id="clock"></span></div>
+    <div class="prog" id="prog"><i></i></div>
+    <div class="chips" id="chips"></div>
+    <div class="stage" id="stage"></div>
+  </section>
+</div>
+
+<div class="toasts" id="toasts"></div>
+<div class="modal" id="modal"><div class="box" id="modalBox"></div></div>
+
+<script src="sporsmal.js"></script>
+<script src="logikk.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js" defer></script>
+<script>
+"use strict";
+/* ============================================================
+   Samme Tanke
+   Samme oppsett som Ordle: PeerJS peer-to-peer der vertens nettleser
+   er «serveren». Verten holder hele tilstanden og sender hver spiller
+   en egen visning der andres svar er fjernet fram til avsløringen.
+   ============================================================ */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); }catch{ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch{} }
+};
+const sess = {
+  get(k, d){ try{ const v = sessionStorage.getItem(k); return v == null ? d : JSON.parse(v); }catch{ return d; } },
+  set(k, v){ try{ sessionStorage.setItem(k, JSON.stringify(v)); }catch{} },
+  del(k){ try{ sessionStorage.removeItem(k); }catch{} }
+};
+
+const PREFIX = 'okg-sammetanke-';
+const ROUNDS = 5, ANSWER_MS = 20000, REMATCH_MS = 10000, GRACE_MS = 700, READ_MS = 7000;
+const MIN_PLAYERS = 2, MAX_PLAYERS = 8, PRESENT_MS = 8000;
+const K_SESSION = 'sammetanke-sesjon', K_HOST = 'sammetanke-vert', K_NAME = 'sammetanke-navn', K_DRAFT = 'sammetanke-utkast';
+/* Avsløringen: kortene snus ett etter ett, deretter samles de i grupper. */
+const FLIP0 = 500, FLIPSTEP = 520;
+const groupAt = n => FLIP0 + n * FLIPSTEP + 450;
+const revealMs = n => groupAt(n) + 900;
+
+const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+function randCode(){ const a = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; return Array.from({length:5}, () => a[Math.floor(Math.random() * a.length)]).join(''); }
+const peerOpts = () => Object.assign({debug:0}, window.ST_PEER_OPTS || {});
+const hue = s => { let h = 0; for(const c of String(s)) h = (h * 31 + c.charCodeAt(0)) % 360; return h; };
+const av = (pid, name) => `<span class="av" style="--h:${hue(pid)}">${esc((name || '?').trim().charAt(0).toUpperCase() || '?')}</span>`;
+const listNames = a => a.length <= 1 ? (a[0] || '') : a.slice(0, -1).join(', ') + ' og ' + a[a.length - 1];
+const q = s => `«${esc(s)}»`;
+
+function toast(msg){
+  const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
+  $('#toasts').appendChild(t); setTimeout(() => t.remove(), 2700);
+}
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id));
+  const inRoom = id !== 'start';
+  $('#homeBtn').hidden = !inRoom; $('#siteBtn').hidden = inRoom;
+}
+function openModal(html){ $('#modalBox').innerHTML = html; $('#modal').classList.add('on'); }
+function closeModal(){ $('#modal').classList.remove('on'); }
+$('#modal').addEventListener('click', e => { if(e.target.id === 'modal') closeModal(); });
+async function copy(text){
+  try{ await navigator.clipboard.writeText(text); toast('Lenken er kopiert!'); }
+  catch{ toast('Kunne ikke kopiere – marker og kopier manuelt'); }
+}
+function setNet(msg){ $('#net').textContent = msg || ''; }
+function setHash(code){ history.replaceState(null, '', location.pathname + (code ? '#rom=' + code : '')); }
+
+/* Synlig høyde – holder låseknappen over skjermtastaturet også på iOS. */
+function fitViewport(){
+  const vv = window.visualViewport;
+  const h = vv ? vv.height : innerHeight;
+  document.documentElement.style.setProperty('--vvh', h + 'px');
+  document.body.classList.toggle('short', h < 560);
+  if(vv && vv.offsetTop) window.scrollTo(0, 0);
+  const f = document.activeElement;
+  if(f && f.id === 'ans') requestAnimationFrame(() => f.scrollIntoView({block:'nearest'}));
+}
+if(window.visualViewport){ visualViewport.addEventListener('resize', fitViewport); visualViewport.addEventListener('scroll', fitViewport); }
+addEventListener('resize', fitViewport); fitViewport();
+
+/* ============================================================
+   VERT: tilstand og regler
+   ============================================================ */
+const H = { on:false, peer:null, s:null, conns:new Map(), seen:{}, tries:0, beat:0, fresh:false };
+
+function newHostState(code, pid, name){
+  return { code, hostPid:pid, phase:'lobby', game:0, round:0, total:ROUNDS, qids:[], usedQ:[],
+           players:{[pid]:{name, left:false}}, order:[pid], deadline:null, phaseAt:Date.now(), cur:null, log:[], seq:0 };
+}
+const recent = pid => pid === H.s.hostPid || Date.now() - (H.seen[pid] || 0) < PRESENT_MS;
+const activePlayers = () => H.s.order.filter(p => !H.s.players[p].left);
+
+function hostChanged(){ H.s.seq++; sess.set(K_HOST, H.s); hostBroadcast(); }
+function hostBroadcast(){
+  H.beat = Date.now();
+  for(const [pid, c] of H.conns) send(c, {t:'state', v:viewFor(pid)});
+  applyView(viewFor(H.s.hostPid));
+}
+
+/* Hver spiller får sin egen visning. Andres svar og valg sendes ikke før de avsløres. */
+function viewFor(pid){
+  const s = H.s, c = s.cur, now = Date.now();
+  const scores = ST.totals(s.order, s.log);
+  const v = { code:s.code, game:s.game, phase:s.phase, round:s.round, total:s.total, host:s.hostPid, you:pid, seq:s.seq,
+    players: s.order.map(p => ({pid:p, name:s.players[p].name, left:!!s.players[p].left, on:recent(p), score:scores[p]})),
+    left: s.deadline ? s.deadline - now : null, age: now - s.phaseAt };
+  if(c && s.phase !== 'lobby' && s.phase !== 'final'){
+    v.q = c.q; v.parts = c.participants;
+    if(s.phase === 'answer'){
+      v.locked = Object.keys(c.answers);
+      v.mine = c.answers[pid] ? c.answers[pid].text : null;
+    } else {
+      v.cards = c.participants.map(p => ({pid:p, text:c.answers[p] ? c.answers[p].text : null, key:c.answers[p] ? c.answers[p].norm : null}));
+      v.res = { groups:c.res.groups, points:c.res.points, full:c.res.full, rematch:c.res.rematch };
+    }
+    if(s.phase === 'rematch'){ v.options = c.options; v.picked = Object.keys(c.picks); v.myPick = c.picks[pid] || null; }
+    if(s.phase === 'rematchReveal'){ v.options = c.options; v.rr = Object.assign({picks:c.picks}, c.rr); }
+  }
+  if(s.phase === 'final'){
+    v.buddies = {};
+    for(const p of s.order) v.buddies[p] = ST.bestBuddies(p, s.log);
+    v.rounds = s.log.length;
+  }
+  return v;
+}
+
+function hostStartGame(){
+  const s = H.s;
+  const ready = activePlayers().filter(recent);
+  if(ready.length < MIN_PLAYERS){ toast('Dere må være minst to'); return; }
+  s.game++;
+  s.qids = ST.drawQuestions(SPORSMAL.length, ROUNDS, s.usedQ);
+  s.usedQ = s.usedQ.concat(s.qids);
+  s.round = 0; s.log = [];
+  startRound();
+}
+function startRound(){
+  const s = H.s, now = Date.now();
+  s.round++;
+  s.cur = { q:SPORSMAL[s.qids[s.round - 1]], participants:activePlayers().filter(recent), answers:{}, picks:{}, res:null, options:null, rr:null };
+  s.phase = 'answer'; s.phaseAt = now; s.deadline = now + ANSWER_MS;
+  hostChanged();
+}
+function hostAnswer(pid, game, round, text){
+  const s = H.s, c = s.cur;
+  if(s.phase !== 'answer' || game !== s.game || round !== s.round) return;
+  if(!c.participants.includes(pid) || c.answers[pid]) return;          // første låste svar gjelder
+  if(Date.now() > s.deadline + GRACE_MS) return;
+  const t = ST.clean(text), n = ST.normalize(t);
+  if(!n) return;
+  c.answers[pid] = {text:t, norm:n};
+  hostChanged(); checkEarly();
+}
+function endAnswer(){
+  const s = H.s, c = s.cur, now = Date.now();
+  if(s.phase !== 'answer') return;
+  c.res = ST.scoreRound(c.participants, c.answers);
+  s.log.push({ round:s.round, participants:c.participants, groups:c.res.groups.map(g => ({key:g.key, pids:g.pids})), points:c.res.points, bonus:{} });
+  s.phase = 'reveal'; s.phaseAt = now;
+  s.deadline = c.res.rematch ? now + revealMs(c.participants.length) + READ_MS : null;
+  hostChanged();
+}
+function startRematch(){
+  const s = H.s, c = s.cur, now = Date.now();
+  if(s.phase !== 'reveal' || !c.res.rematch) return;
+  c.options = c.res.groups.map(g => ({key:g.key, text:g.text, pids:g.pids}));
+  c.picks = {};
+  s.phase = 'rematch'; s.phaseAt = now; s.deadline = now + REMATCH_MS;
+  hostChanged();
+}
+function hostPick(pid, game, round, key){
+  const s = H.s, c = s.cur;
+  if(s.phase !== 'rematch' || game !== s.game || round !== s.round) return;
+  if(!c.participants.includes(pid) || c.picks[pid]) return;            // første valg gjelder
+  if(!c.options.some(o => o.key === key)) return;
+  if(Date.now() > s.deadline + GRACE_MS) return;
+  c.picks[pid] = key;
+  hostChanged(); checkEarly();
+}
+function endRematch(){
+  const s = H.s, c = s.cur;
+  if(s.phase !== 'rematch') return;
+  c.rr = ST.scoreRematch(c.participants, c.answers, c.picks);
+  s.log[s.log.length - 1].bonus = c.rr.bonus;
+  s.phase = 'rematchReveal'; s.phaseAt = Date.now(); s.deadline = null;
+  hostChanged();
+}
+function hostNext(){
+  const s = H.s;
+  const canGo = s.phase === 'rematchReveal' || (s.phase === 'reveal' && !s.cur.res.rematch);
+  if(!canGo) return;
+  if(s.round < s.total) return startRound();
+  s.phase = 'final'; s.phaseAt = Date.now(); s.deadline = null;
+  hostChanged();
+}
+function hostPlayAgain(){
+  const s = H.s;
+  if(s.phase !== 'final') return;
+  for(const p of [...s.order]) if(s.players[p].left || !recent(p)){ if(p !== s.hostPid){ delete s.players[p]; s.order = s.order.filter(x => x !== p); } }
+  hostStartGame();
+}
+function checkEarly(){
+  const s = H.s, c = s.cur;
+  if(s.phase === 'answer' && c.participants.filter(recent).every(p => c.answers[p])) endAnswer();
+  else if(s.phase === 'rematch' && c.participants.filter(recent).every(p => c.picks[p])) endRematch();
+}
+function hostTick(){
+  if(!H.on || !H.s) return;
+  const s = H.s, now = Date.now();
+  if(s.deadline){
+    if(s.phase === 'answer' && now >= s.deadline + GRACE_MS) endAnswer();
+    else if(s.phase === 'rematch' && now >= s.deadline + GRACE_MS) endRematch();
+    else if(s.phase === 'reveal' && now >= s.deadline) startRematch();
+  }
+  if(s.phase === 'answer' || s.phase === 'rematch') checkEarly();
+  if(now - H.beat > 2000) hostBroadcast();   // puls: tilstand, nedtelling og hvem som er tilkoblet
+}
+setInterval(hostTick, 250);
+
+function hostBye(pid){
+  const s = H.s, p = s.players[pid]; if(!p || pid === s.hostPid) return;
+  const c = H.conns.get(pid); H.conns.delete(pid); H.seen[pid] = 0;
+  if(s.phase === 'lobby'){ delete s.players[pid]; s.order = s.order.filter(x => x !== pid); }
+  else p.left = true;
+  try{ c && c.close(); }catch{}
+  hostChanged(); if(s.phase === 'answer' || s.phase === 'rematch') checkEarly();
+}
+function uniqueName(name, pid){
+  const taken = new Set(H.s.order.filter(p => p !== pid && !H.s.players[p].left).map(p => H.s.players[p].name.toLocaleLowerCase('nb')));
+  let n = name, i = 2;
+  while(taken.has(n.toLocaleLowerCase('nb'))) n = name.slice(0, 13) + ' ' + i++;
+  return n;
+}
+function hostRecv(c, d){
+  if(!d || typeof d !== 'object' || !H.s) return;
+  const s = H.s;
+  if(d.t === 'hello'){
+    const pid = String(d.pid || '').slice(0, 40);
+    if(!pid || pid === s.hostPid) return;
+    const name = ST.clean(d.name).slice(0, 16) || 'Spiller';
+    let p = s.players[pid];
+    if(!p){
+      if(activePlayers().length >= MAX_PLAYERS){ send(c, {t:'full'}); setTimeout(() => { try{ c.close(); }catch{} }, 800); return; }
+      p = s.players[pid] = {name:uniqueName(name, pid), left:false};
+      s.order.push(pid);
+    } else if(p.left){ p.left = false; }
+    const old = H.conns.get(pid);
+    if(old && old !== c) try{ old.close(); }catch{}
+    c.pid = pid; H.conns.set(pid, c); H.seen[pid] = Date.now();
+    hostChanged();
+    return;
+  }
+  const pid = c.pid;
+  if(!pid || H.conns.get(pid) !== c) return;
+  H.seen[pid] = Date.now();
+  if(d.t === 'answer') hostAnswer(pid, d.g, d.round, d.text);
+  else if(d.t === 'pick') hostPick(pid, d.g, d.round, d.key);
+  else if(d.t === 'bye') hostBye(pid);
+}
+function hostAct(type, d){
+  const me = H.s.hostPid;
+  if(type === 'answer') hostAnswer(me, d.g, d.round, d.text);
+  else if(type === 'pick') hostPick(me, d.g, d.round, d.key);
+}
+
+/* ---------- Vertens nettverk ---------- */
+function hostCreate(name){
+  leaveRoom(true);
+  const pid = uid(), code = randCode();
+  H.s = newHostState(code, pid, name); H.on = true; H.fresh = true; H.tries = 0;
+  sess.set(K_SESSION, {code, pid, name, host:true}); sess.set(K_HOST, H.s);
+  setHash(code); setNet('Lager rom …');
+  hostOpen();
+}
+function hostResume(saved){
+  H.s = saved; H.on = true; H.fresh = false; H.tries = 0;
+  const now = Date.now();
+  for(const p of saved.order) H.seen[p] = now;   // gi alle litt tid til å koble seg på igjen
+  setHash(saved.code); setNet('Gjenoppretter rommet …');
+  applyView(viewFor(saved.hostPid));
+  hostOpen();
+}
+function hostOpen(){
+  if(!peerReady()) return;
+  const peer = H.peer = new Peer(PREFIX + H.s.code, peerOpts());
+  let opened = false;
+  peer.on('open', () => { if(H.peer !== peer) return; opened = true; H.tries = 0; H.fresh = false; setNet(''); hostChanged(); });
+  peer.on('connection', c => {
+    c.on('data', d => { if(H.peer === peer) hostRecv(c, d); });
+    c.on('close', () => { if(H.conns.get(c.pid) === c) H.conns.delete(c.pid); });
+    c.on('error', () => {});
+  });
+  peer.on('disconnected', () => {
+    if(H.peer !== peer || peer.destroyed) return;
+    setNet('Mistet kontakten med server – prøver igjen …');
+    setTimeout(() => { if(H.peer === peer && !peer.destroyed && peer.disconnected) try{ peer.reconnect(); }catch{} }, 1500);
+  });
+  peer.on('error', e => {
+    if(H.peer !== peer) return;
+    if(e.type === 'unavailable-id'){
+      if(H.fresh && H.tries++ < 3){                     // koden var opptatt: lag en ny
+        peer.destroy(); const code = randCode();
+        H.s.code = code; sess.set(K_SESSION, Object.assign(sess.get(K_SESSION, {}), {code})); setHash(code);
+        return hostOpen();
+      }
+      if(H.tries++ < 25){ peer.destroy(); setTimeout(() => H.on && hostOpen(), 1500); return; }  // gammel fane holder fortsatt koden
+      toast('Rommet er allerede åpent i en annen fane'); leaveRoom(); return;
+    }
+    if(!opened && ['network','server-error','socket-error','socket-closed'].includes(e.type)){
+      setNet('Får ikke kontakt med server – prøver igjen …');
+      peer.destroy(); setTimeout(() => H.on && hostOpen(), 3000);
+    }
+  });
+}
+
+/* ============================================================
+   SPILLER: tilkobling til verten
+   ============================================================ */
+const C = { on:false, peer:null, conn:null, code:'', pid:'', name:'', last:0, ever:false, resume:false, retry:null, fails:0, startedAt:0, ping:0 };
+function send(c, m){ try{ c && c.open && c.send(m); }catch{} }
+function peerReady(){
+  if(window.Peer) return true;
+  toast('Kunne ikke laste nettverksmodulen. Sjekk nettforbindelsen.'); return false;
+}
+function clientStart(code, pid, name, resume){
+  leaveRoom(true);
+  Object.assign(C, {on:true, code, pid, name, ever:false, resume:!!resume, fails:0, startedAt:Date.now(), last:Date.now()});
+  sess.set(K_SESSION, {code, pid, name, host:false});
+  setHash(code); setNet('Kobler til rom ' + code + ' …');
+  clientConnect();
+}
+function clientKill(){
+  try{ C.conn && C.conn.close(); }catch{}
+  try{ C.peer && C.peer.destroy(); }catch{}
+  C.conn = null; C.peer = null;
+}
+function clientConnect(){
+  clearTimeout(C.retry);
+  if(!C.on || !peerReady()) return;
+  clientKill();
+  C.attemptAt = Date.now();
+  const peer = C.peer = new Peer(peerOpts());
+  peer.on('open', () => {
+    if(C.peer !== peer) return;
+    const conn = C.conn = peer.connect(PREFIX + C.code, {reliable:true});
+    conn.on('open', () => { C.last = Date.now(); send(conn, {t:'hello', pid:C.pid, name:C.name}); });
+    conn.on('data', d => { if(C.conn === conn) clientRecv(d); });
+    conn.on('close', () => { if(C.conn === conn) clientLost(); });
+    conn.on('error', () => { if(C.conn === conn) clientLost(); });
+  });
+  peer.on('error', e => {
+    if(C.peer !== peer) return;
+    if(e.type === 'peer-unavailable' && !C.ever){
+      const waited = Date.now() - C.startedAt;
+      if(!C.resume || waited > 45000){ toast(C.resume ? 'Fant ikke rommet lenger' : 'Fant ikke rommet – sjekk koden'); leaveRoom(); return; }
+      setNet('Venter på verten …');
+    }
+    clientLost();
+  });
+}
+function clientLost(){
+  if(!C.on) return;
+  if(C.ever) setNet('Mistet kontakten – kobler til igjen …');
+  clientKill(); clearTimeout(C.retry);
+  C.retry = setTimeout(clientConnect, Math.min(5000, 1200 + C.fails++ * 800));
+}
+function clientRecv(d){
+  if(!d || typeof d !== 'object') return;
+  C.last = Date.now();
+  if(d.t === 'state'){
+    if(!C.ever || $('#net').textContent) setNet('');
+    C.ever = true; C.fails = 0; C.resume = true;
+    applyView(d.v);
+  } else if(d.t === 'closed'){ toast('Verten avsluttet rommet'); leaveRoom(); }
+  else if(d.t === 'full'){ toast('Rommet er fullt (maks 8 spillere)'); leaveRoom(); }
+}
+setInterval(() => {
+  if(!C.on) return;
+  const now = Date.now();
+  if(C.conn && C.conn.open && now - C.ping > 2000){ C.ping = now; send(C.conn, {t:'ping'}); }
+  if(C.ever && C.conn && now - C.last > 7000) clientLost();                 // verten svarer ikke
+  else if(!(C.conn && C.conn.open) && C.peer && now - C.attemptAt > 10000) clientLost();  // tilkoblingen henger
+}, 1000);
+function act(type, d){
+  if(H.on) hostAct(type, d);
+  else send(C.conn, Object.assign({t:type}, d));
+}
+
+/* Forlat rommet. quiet = bare rydd opp (brukes før et nytt rom). */
+function leaveRoom(quiet){
+  if(H.on && H.s && !quiet){
+    for(const c of H.conns.values()) send(c, {t:'closed'});
+  }
+  if(C.on && C.conn && !quiet) send(C.conn, {t:'bye'});
+  const hp = H.peer, cp = C.peer;
+  setTimeout(() => { try{ hp && hp.destroy(); }catch{} try{ cp && cp.destroy(); }catch{} }, quiet ? 0 : 300);
+  clearTimeout(C.retry);
+  Object.assign(H, {on:false, peer:null, s:null, conns:new Map(), seen:{}});
+  Object.assign(C, {on:false, peer:null, conn:null, ever:false});
+  UI.v = null; UI.key = ''; clearTimers();
+  if(!quiet){
+    sess.del(K_SESSION); sess.del(K_HOST); setHash(''); setNet('');
+    closeModal(); showStart(); showScreen('start');
+  }
+}
+
+/* ============================================================
+   VISNING (felles for vert og spillere)
+   ============================================================ */
+const UI = { v:null, key:'', deadline:0, total:0, timers:[], sent:false, sentAt:0, picked:null };
+function clearTimers(){ UI.timers.forEach(clearTimeout); UI.timers = []; }
+const later = (ms, f) => UI.timers.push(setTimeout(f, Math.max(0, ms)));
+const nameOf = (v, pid) => { const p = v.players.find(x => x.pid === pid); return p ? p.name : '?'; };
+const isHost = v => v.you === v.host;
+
+function applyView(v){
+  if(!v) return;
+  UI.v = v;
+  const key = v.game + '|' + v.round + '|' + v.phase;
+  const changed = key !== UI.key;
+  if(v.left != null){
+    const d = performance.now() + v.left;
+    if(changed || Math.abs(d - UI.deadline) > 300) UI.deadline = d;
+  } else UI.deadline = 0;
+  if(v.phase === 'lobby'){ UI.key = key; renderLobby(v); showScreen('lobby'); return; }
+  if(changed){
+    UI.key = key; clearTimers(); UI.sent = false; UI.picked = null;
+    closeModal(); showScreen('play'); build(v);
+  }
+  update(v);
+}
+
+/* ---------- Lobby ---------- */
+function renderLobby(v){
+  const link = location.origin + location.pathname + '#rom=' + v.code;
+  $('#roomCode').textContent = v.code; $('#roomLink').value = link;
+  const act = v.players.filter(p => !p.left);
+  $('#lobbyCount').textContent = `(${act.length}/${MAX_PLAYERS})`;
+  $('#lobbyPlayers').innerHTML = act.map(p =>
+    `<li class="${p.on ? '' : 'off'}"><span class="who-row">${av(p.pid, p.name)}<span>${esc(p.name)}${p.pid === v.you ? ' (deg)' : ''}</span></span>
+     <span class="small">${p.pid === v.host ? 'Vert' : p.on ? '' : 'frakoblet'}</span></li>`).join('');
+  const ready = act.filter(p => p.on).length;
+  $('#lobbyStart').hidden = !isHost(v);
+  $('#lobbyStart').disabled = ready < MIN_PLAYERS;
+  $('#lobbyInfo').textContent = isHost(v)
+    ? (ready < MIN_PLAYERS ? 'Venter på minst én spiller til. Del lenken!' : `${ready} spillere er klare. Start når alle er med – fem runder.`)
+    : `Venter på at ${nameOf(v, v.host)} starter spillet …`;
+}
+$('#roomCopy').onclick = () => {
+  const link = $('#roomLink').value;
+  if(navigator.share && matchMedia('(pointer:coarse)').matches) navigator.share({title:'Samme Tanke', text:'Bli med på Samme Tanke!', url:link}).catch(() => {});
+  else copy(link);
+};
+$('#lobbyStart').onclick = () => H.on && hostStartGame();
+
+/* ---------- Topplinje og spillerrad ---------- */
+const PHASE_LABEL = { answer:'Skriv svaret ditt', reveal:'Avsløring', rematch:'Tenk én gang til', rematchReveal:'Resultat', final:'Sluttstilling' };
+function renderBar(v){
+  $('#rnd').textContent = v.phase === 'final' ? 'Ferdig!' : `Runde ${v.round} av ${v.total}`;
+  $('#ph').textContent = PHASE_LABEL[v.phase] || '';
+  UI.total = v.phase === 'answer' ? ANSWER_MS : v.phase === 'rematch' ? REMATCH_MS : 0;
+  $('#prog').classList.toggle('hide', !UI.total);
+}
+function renderChips(v){
+  const el = $('#chips');
+  if(v.phase !== 'answer' && v.phase !== 'rematch'){ el.innerHTML = ''; return; }
+  const done = new Set(v.phase === 'answer' ? v.locked : v.picked);
+  el.innerHTML = v.parts.map(pid => {
+    const p = v.players.find(x => x.pid === pid) || {name:'?', on:false};
+    const ok = done.has(pid);
+    return `<span class="chip${ok ? ' done' : ''}${pid === v.you ? ' me' : ''}${p.on ? '' : ' off'}" title="${ok ? 'Har svart' : 'Tenker …'}">
+      ${av(pid, p.name)}<span class="nm">${esc(p.name)}</span><span class="ck">${ok ? '✓' : p.on ? '…' : '⚡'}</span></span>`;
+  }).join('');
+}
+function tickUI(){
+  const v = UI.v; if(!v || !$('#play').classList.contains('on')) return;
+  const clock = $('#clock');
+  if(UI.deadline && UI.total){
+    const rem = UI.deadline - performance.now(), s = Math.max(0, Math.ceil(rem / 1000));
+    clock.textContent = s;
+    clock.classList.toggle('low', s <= 5);
+    $('#prog').classList.toggle('low', s <= 5);
+    $('#prog i').style.transform = `scaleX(${Math.max(0, Math.min(1, rem / UI.total))})`;
+    if(rem <= 0) timeIsUp(v);
+  } else clock.textContent = '';
+  if(v.phase === 'answer' && $('#lockBtn') && !v.mine) updateAnswer(v);
+  const cl = $('#countdown');
+  if(cl && UI.deadline) cl.textContent = Math.max(0, Math.ceil((UI.deadline - performance.now()) / 1000));
+}
+setInterval(tickUI, 100);
+
+/* ---------- Fasene ---------- */
+function build(v){
+  renderBar(v);
+  const st = $('#stage'); st.scrollTop = 0;
+  if(v.phase === 'answer') buildAnswer(v, st);
+  else if(v.phase === 'reveal') buildReveal(v, st);
+  else if(v.phase === 'rematch') buildRematch(v, st);
+  else if(v.phase === 'rematchReveal') buildRematchReveal(v, st);
+  else if(v.phase === 'final') buildFinal(v, st);
+}
+function update(v){
+  renderChips(v);
+  if(v.phase === 'answer') updateAnswer(v);
+  else if(v.phase === 'rematch') updateRematch(v);
+  else if(v.phase === 'reveal' || v.phase === 'rematchReveal') updateHostButtons(v);
+  else if(v.phase === 'final') updateFinal(v);
+  tickUI();
+}
+
+/* --- Første forsøk --- */
+const draftKey = v => `${v.code}|${v.game}|${v.round}`;
+function buildAnswer(v, st){
+  const playing = v.parts.includes(v.you);
+  const draft = sess.get(K_DRAFT, {});
+  st.innerHTML = `
+    <div class="qbox"><h2 class="q" id="qText">${esc(v.q)}</h2>
+      <p class="hint">Svar det du tror de andre svarer. Kort er best!</p></div>
+    ${playing ? `<form class="ansform" id="ansForm" autocomplete="off">
+        <input id="ans" maxlength="${ST.MAX_LEN}" placeholder="Ett kort svar" enterkeyhint="send" autocapitalize="sentences" spellcheck="false" aria-label="Ditt svar" value="${esc(draft.k === draftKey(v) ? draft.t : '')}">
+        <button class="btn green" id="lockBtn" type="submit">Lås</button></form>
+      <div id="lockBox"></div>`
+      : `<div class="banner">Du kom inn midt i runden og er med fra neste.<span class="sub">Se på mens de andre svarer.</span></div>`}
+    <p class="wait" id="waitLine"></p>`;
+  if(!playing) return;
+  const inp = $('#ans');
+  inp.addEventListener('input', () => sess.set(K_DRAFT, {k:draftKey(v), t:inp.value}));
+  $('#ansForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const v = UI.v; if(!v || v.phase !== 'answer' || v.mine || UI.sent) return;
+    if(UI.deadline && UI.deadline - performance.now() <= 0) return;
+    const text = ST.clean(inp.value);
+    if(!ST.normalize(text)){ toast('Skriv et svar først'); inp.focus(); return; }
+    UI.sent = true; UI.sentAt = Date.now(); UI.sentText = text;
+    inp.disabled = true; $('#lockBtn').disabled = true; $('#lockBtn').textContent = '…';
+    act('answer', {g:v.game, round:v.round, text});
+  });
+  /* Fokus uten å rulle siden; på PC kan man begynne å skrive med én gang. */
+  if(!v.mine && !matchMedia('(pointer:coarse)').matches) setTimeout(() => inp.focus({preventScroll:true}), 50);
+}
+function updateAnswer(v){
+  const form = $('#ansForm'), box = $('#lockBox');
+  if(form){
+    const timeUp = UI.deadline && UI.deadline - performance.now() <= 0;
+    if(v.mine){
+      form.classList.add('hide');
+      box.innerHTML = `<div class="lockbox">Svaret ditt er låst<b>${q(v.mine)}</b></div>`;
+      if(document.activeElement && document.activeElement.id === 'ans') document.activeElement.blur();
+    } else if(timeUp){
+      form.classList.add('hide');
+      box.innerHTML = `<div class="lockbox miss">⏱ Tiden er ute<b>Rakk ikke å svare</b></div>`;
+    } else if(!UI.sent){
+      const lb = $('#lockBtn'), rem = UI.deadline - performance.now();
+      lb.classList.toggle('nudge', rem < 5000 && !!ST.normalize($('#ans').value));
+    } else if(UI.sent && Date.now() - UI.sentAt > 2500){   // ingen bekreftelse – la spilleren prøve igjen
+      UI.sent = false; $('#ans').disabled = false; $('#lockBtn').disabled = false; $('#lockBtn').textContent = 'Lås';
+    }
+  }
+  const waiting = v.parts.filter(p => !v.locked.includes(p));
+  $('#waitLine').textContent = !waiting.length ? 'Alle har svart!'
+    : (v.mine || !v.parts.includes(v.you)) ? `Venter på ${listNames(waiting.map(p => nameOf(v, p)))} …` : `${v.locked.length} av ${v.parts.length} har låst svaret`;
+}
+function timeIsUp(v){
+  if(v.phase === 'answer') updateAnswer(v);
+  else if(v.phase === 'rematch') updateRematch(v);
+}
+
+/* --- Avsløring --- */
+function groupClass(g, i){
+  if(g.pids.length > 1) return 'g' + (i % 6);
+  return 'solo';
+}
+function gColor(cls){ return cls === 'solo' ? '' : `style="--gc:var(--${cls})"`; }
+function cardHTML(v, c){
+  const name = nameOf(v, c.pid) + (c.pid === v.you ? ' (deg)' : '');
+  return `<div class="fcard${c.pid === v.you ? ' me' : ''}" data-pid="${esc(c.pid)}"><div class="fin">
+    <div class="fside fback"><span class="who">${esc(name)}</span><span class="qm">?</span></div>
+    <div class="fside ffront"><span class="who">${esc(name)}</span>${c.key ? `<span class="at">${esc(c.text)}</span>` : `<span class="at none">Rakk ikke å svare</span>`}</div>
+  </div></div>`;
+}
+function personalLine(v){
+  const me = v.you, card = v.cards.find(c => c.pid === me);
+  if(!card) return `<div class="banner">Du ser på denne runden<span class="sub">Du er med fra neste runde.</span></div>`;
+  if(!card.key) return `<div class="banner">Du rakk ikke å svare<span class="sub">0 poeng denne gangen.</span></div>`;
+  const g = v.res.groups.find(g => g.key === card.key);
+  const others = g.pids.filter(p => p !== me).map(p => nameOf(v, p));
+  if(!others.length) return `<div class="banner">Ingen andre skrev ${q(card.text)}<span class="sub">0 poeng – men kanskje i omkampen?</span></div>`;
+  return `<div class="banner good">Du tenkte som ${esc(listNames(others))}! <span class="sub">+${others.length} poeng${v.res.full ? ' + 1 for full klaff' : ''}</span></div>`;
+}
+function groupsHTML(v){
+  const gs = v.res.groups.map((g, i) => {
+    const cls = groupClass(g, i), mine = g.pids.includes(v.you);
+    const tag = g.pids.length > 1 ? `${g.pids.length} like · +${g.points} hver` : 'Alene om det · 0';
+    return `<div class="grp ${cls === 'solo' ? 'solo' : ''}${mine ? ' mine' : ''}" ${gColor(cls)} data-key="${esc(g.key)}">
+      <div class="ghead"><span class="gtext">${g.pids.length > 1 ? '✓ ' : ''}${esc(g.text)}</span><span class="gtag">${tag}</span></div>
+      <div class="gbody"></div></div>`;
+  });
+  const missing = v.cards.filter(c => !c.key);
+  if(missing.length) gs.push(`<div class="grp miss" data-key=""><div class="ghead"><span class="gtext">Rakk ikke å svare</span><span class="gtag">0</span></div><div class="gbody"></div></div>`);
+  return gs.join('');
+}
+function buildReveal(v, st){
+  const n = v.cards.length, skip = v.age >= revealMs(n) - 200;
+  st.innerHTML = `<p class="qsmall">${esc(v.q)}</p>
+    <div id="revTop"></div>
+    <div class="cards" id="cards">${v.cards.map(c => cardHTML(v, c)).join('')}</div>
+    <div class="groups hide" id="groups">${groupsHTML(v)}</div>
+    <div class="after hide" id="after"></div>`;
+  const flip = el => el.classList.add('flipped');
+  const els = [...st.querySelectorAll('#cards .fcard')];
+  if(skip){ els.forEach(flip); doGroup(v, false); return; }
+  els.forEach((el, i) => later(FLIP0 + i * FLIPSTEP - v.age, () => flip(el)));
+  later(groupAt(n) - v.age, () => doGroup(v, true));
+}
+function doGroup(v, animate){
+  const cards = $('#cards'), groups = $('#groups'); if(!cards || !groups) return;
+  const els = [...cards.querySelectorAll('.fcard')];
+  const before = new Map(els.map(el => [el, el.getBoundingClientRect()]));
+  groups.classList.remove('hide');
+  const keyOf = pid => { const c = v.cards.find(x => x.pid === pid); return c && c.key ? c.key : ''; };
+  for(const el of els){
+    const k = keyOf(el.dataset.pid);
+    const body = [...groups.querySelectorAll('.grp')].find(g => g.dataset.key === k).querySelector('.gbody');
+    const card = v.cards.find(x => x.pid === el.dataset.pid);
+    const grp = v.res.groups.find(g => g.key === k);
+    /* Vis egen skrivemåte bare hvis den skiller seg fra gruppens tekst. */
+    const at = el.querySelector('.at');
+    if(at && (!card.key || (grp && card.text === grp.text))) at.remove();
+    el.classList.add('small'); body.appendChild(el);
+  }
+  cards.remove();
+  if(animate){
+    for(const el of els){
+      const a = before.get(el), b = el.getBoundingClientRect();
+      if(!a) continue;
+      el.style.transform = `translate(${a.left - b.left}px,${a.top - b.top}px)`;
+      el.getBoundingClientRect();
+      el.classList.add('fly'); el.style.transform = '';
+    }
+  }
+  $('#revTop').innerHTML = (v.res.full ? `<div class="klaff"><b>Full klaff!</b>Alle skrev ${q(v.res.groups[0].text)} – +1 ekstra poeng til alle</div>` : '') +
+    (v.cards.some(c => c.key) ? personalLine(v) : `<div class="banner">Ingen rakk å svare!<span class="sub">Ingen poeng denne runden.</span></div>`);
+  showAfter(v);
+}
+function showAfter(v){
+  const el = $('#after'); if(!el) return;
+  el.classList.remove('hide');
+  if(v.res.rematch){
+    el.innerHTML = `<p class="countline">Tenk én gang til starter om <b id="countdown"></b> s</p>
+      <div class="btns" id="hostBtns"></div>`;
+  } else {
+    const why = v.res.full ? '' : v.res.groups.length === 1 ? '<p class="wait">Bare ett svar kom inn – ingen omkamp denne gangen.</p>' : '';
+    el.innerHTML = `${why}<div class="card">${scoreTable(v, v.res.points)}</div><div class="btns" id="hostBtns"></div>`;
+  }
+  updateHostButtons(UI.v);
+}
+function updateHostButtons(v){
+  const el = $('#hostBtns'); if(!el || !v) return;
+  const host = isHost(v), last = v.round >= v.total;
+  let html = '';
+  if(v.phase === 'reveal' && v.res.rematch){
+    html = host ? `<button class="btn sec" id="goRematch">Start omkampen nå</button>` : '';
+  } else {
+    html = host ? `<button class="btn green big" id="nextBtn">${last ? 'Se sluttstilling' : 'Neste runde'}</button>`
+                : `<p class="wait" style="flex:1">Venter på at ${esc(nameOf(v, v.host))} går videre …</p>`;
+  }
+  if(el.dataset.h !== html){ el.innerHTML = html; el.dataset.h = html; }
+  const nb = $('#nextBtn'); if(nb) nb.onclick = () => { nb.disabled = true; hostNext(); };
+  const gr = $('#goRematch'); if(gr) gr.onclick = () => { gr.disabled = true; startRematch(); };
+}
+function scoreTable(v, roundPts, extra){
+  const list = ST.standings(v.players.filter(p => !p.left || p.score > 0), Object.fromEntries(v.players.map(p => [p.pid, p.score])));
+  return `<table class="rank">${list.map(p => {
+    const rp = roundPts ? (roundPts[p.pid] || 0) + (extra ? (extra[p.pid] || 0) : 0) : null;
+    return `<tr class="${p.pid === v.you ? 'me' : ''}"><td class="pl">${p.place}.</td>
+      <td><span class="who-row">${av(p.pid, p.name)}<span>${esc(p.name)}${p.pid === v.you ? ' (deg)' : ''}${p.left ? ' <span class="small">(forlot spillet)</span>' : ''}</span></span></td>
+      <td class="plus">${rp ? '+' + rp : ''}</td><td class="pts">${p.score} p</td></tr>`;
+  }).join('')}</table>`;
+}
+
+/* --- Omkampen --- */
+function buildRematch(v, st){
+  const playing = v.parts.includes(v.you);
+  const myCard = (v.cards || []).find(c => c.pid === v.you);
+  st.innerHTML = `<div class="rmhead"><h2>Tenk én gang til</h2>
+      <p>Velg svaret du tror <b>alle</b> velger nå. Beholde eller bytte – blir alle enige, får alle +1.</p></div>
+    <p class="qsmall">${esc(v.q)}</p>
+    <div class="opts" id="opts">${v.options.map(o => `<button class="opt" data-key="${esc(o.key)}" ${playing ? '' : 'disabled'}>
+      ${myCard && myCard.key === o.key ? '<span class="yours">ditt svar</span>' : ''}
+      <b>${esc(o.text)}</b><small>${esc(listNames(o.pids.map(p => nameOf(v, p))))}</small></button>`).join('')}</div>
+    <p class="wait" id="rmWait"></p>`;
+  if(!playing) return;
+  $('#opts').addEventListener('click', e => {
+    const b = e.target.closest('.opt'); const v = UI.v;
+    if(!b || !v || v.phase !== 'rematch' || v.myPick || UI.picked) return;
+    if(UI.deadline && UI.deadline - performance.now() <= 0) return;
+    UI.picked = b.dataset.key; UI.sentAt = Date.now();
+    b.classList.add('chosen'); $('#opts').classList.add('locked');
+    act('pick', {g:v.game, round:v.round, key:b.dataset.key});
+    updateRematch(v);
+  });
+}
+function updateRematch(v){
+  const opts = $('#opts'); if(!opts) return;
+  const playing = v.parts.includes(v.you);
+  const timeUp = UI.deadline && UI.deadline - performance.now() <= 0;
+  if(UI.picked && !v.myPick && Date.now() - UI.sentAt > 2500) UI.picked = null;   // ingen bekreftelse – prøv igjen
+  const mine = v.myPick || UI.picked;
+  opts.querySelectorAll('.opt').forEach(b => {
+    b.classList.toggle('chosen', b.dataset.key === mine);
+    b.disabled = !playing || !!mine || timeUp;
+  });
+  opts.classList.toggle('locked', !!mine || timeUp);
+  const waiting = v.parts.filter(p => !v.picked.includes(p));
+  $('#rmWait').textContent = !playing ? 'Du er med fra neste runde.'
+    : !mine && timeUp ? '⏱ Tiden er ute – du rakk ikke å velge.'
+    : !mine ? 'Trykk på et svar. Valget er hemmelig til alle har valgt.'
+    : waiting.length ? `Valgt! Venter på ${listNames(waiting.map(p => nameOf(v, p)))} …` : 'Alle har valgt!';
+}
+
+/* --- Resultat av omkampen --- */
+function buildRematchReveal(v, st){
+  const rr = v.rr, opt = Object.fromEntries(v.options.map(o => [o.key, o.text]));
+  const own = Object.fromEntries(v.cards.map(c => [c.pid, c.text]));
+  let verdict;
+  if(rr.unanimous) verdict = `<div class="verdict ok">Alle valgte ${q(opt[rr.key])}!<span class="sub">+1 bonuspoeng til alle</span></div>`;
+  else {
+    const missed = rr.moves.filter(m => !m.to).length;
+    verdict = `<div class="verdict no">Ingen enighet denne gangen<span class="sub">${missed ? `${missed === 1 ? 'Én' : missed} rakk ikke å velge. ` : ''}Ingen bonus – poengene fra første forsøk står.</span></div>`;
+  }
+  const swaps = rr.swaps.map(([a, b]) => {
+    return `<div class="swap">🔄 ${esc(nameOf(v, a))} og ${esc(nameOf(v, b))} byttet til hverandres svar!
+      <span class="sub">${q(own[a])} ⇄ ${q(own[b])} – og bommet på hverandre igjen.</span></div>`;
+  }).join('');
+  /* Byttere først, så de som holdt på, så de som ikke rakk. */
+  const order = m => m.switched ? 0 : (m.from && m.to) ? 1 : 2;
+  const moves = [...rr.moves].sort((a, b) => order(a) - order(b));
+  const rows = moves.map((m, i) => {
+    const from = m.from ? q(own[m.pid]) : '<i>ingen svar</i>';
+    const to = m.to ? q(opt[m.to]) : '<i>rakk ikke å velge</i>';
+    const path = m.switched ? `${from} <span class="arrow">→</span> <b>${to}</b>`
+      : m.from && m.to ? `<b>${to}</b>` : `${from} <span class="arrow">→</span> ${to}`;
+    const tag = m.switched ? 'byttet' : m.from && m.to ? 'holdt på' : !m.to ? 'ikke valgt' : 'valgte';
+    return `<div class="mv${m.switched ? ' sw' : ''}${m.pid === v.you ? ' me' : ''}" style="animation-delay:${i * 90}ms">
+      <span class="nm">${esc(nameOf(v, m.pid))}:</span><span class="path">${path}</span><span class="tag">${tag}</span></div>`;
+  }).join('');
+  st.innerHTML = `<p class="qsmall">${esc(v.q)}</p>${verdict}${swaps}
+    <div class="moves">${rows}</div>
+    <div class="card">${scoreTable(v, v.res.points, rr.bonus)}</div>
+    <div class="btns" id="hostBtns"></div>`;
+}
+
+/* --- Sluttstilling --- */
+function buildFinal(v, st){
+  const scores = Object.fromEntries(v.players.map(p => [p.pid, p.score]));
+  const list = ST.standings(v.players.filter(p => !p.left || p.score > 0), scores);
+  const top = list.filter(p => p.place === 1);
+  const title = top.length > 1 ? `Delt seier!` : `${esc(top[0].name)} vant!`;
+  const sub = top.length > 1 ? `${esc(listNames(top.map(p => p.name)))} – ${top[0].score} poeng hver` : `${top[0].score} poeng`;
+  const buddy = pid => {
+    const b = v.buddies[pid];
+    if(!b || !b.n) return 'Ingen felles treff';
+    return `Tankevenn: ${esc(listNames(b.who.map(p => nameOf(v, p))))} (${b.n} ${b.n === 1 ? 'gang' : 'ganger'})`;
+  };
+  const me = list.find(p => p.pid === v.you), mb = v.buddies[v.you];
+  const mine = me ? `<div class="banner good">Du ble nr. ${me.place} med ${me.score} poeng
+      <span class="sub">${mb && mb.n ? `Du tenkte oftest som ${esc(listNames(mb.who.map(p => nameOf(v, p))))} – ${mb.n} av ${v.rounds} runder.` : 'Du var ganske alene om tankene dine i dag.'}</span></div>` : '';
+  st.innerHTML = `<div class="klaff" style="background:var(--accent)"><b>${title}</b>${sub}</div>${mine}
+    <div class="card"><table class="rank">${list.map(p => `<tr class="${p.pid === v.you ? 'me' : ''}">
+      <td class="pl">${p.place === 1 ? '🏆' : p.place + '.'}</td>
+      <td><span class="who-row">${av(p.pid, p.name)}<span>${esc(p.name)}${p.pid === v.you ? ' (deg)' : ''}<span class="buddy">${buddy(p.pid)}</span></span></span></td>
+      <td class="pts">${p.score} p</td></tr>`).join('')}</table></div>
+    <div class="btns" id="finalBtns"></div>`;
+}
+function updateFinal(v){
+  const el = $('#finalBtns'); if(!el) return;
+  const html = isHost(v) ? `<button class="btn green big" id="againBtn">Spill igjen</button>`
+    : `<p class="wait" style="flex:1">Venter på at ${esc(nameOf(v, v.host))} starter fem nye runder …</p>`;
+  if(el.dataset.h !== html){ el.innerHTML = html; el.dataset.h = html; }
+  const b = $('#againBtn'); if(b) b.onclick = () => hostPlayAgain();
+}
+
+/* ============================================================
+   START, MENY OG OPPSTART
+   ============================================================ */
+function savedName(){
+  const n = store.get(K_NAME, '');
+  if(n) return n;
+  const o = store.get('ordle-settings', {});   // gjenbruk navnet fra Ordle hvis det finnes
+  return (o && typeof o.name === 'string') ? o.name : '';
+}
+function readName(inputId){
+  const n = ST.clean($(inputId).value).slice(0, 16);
+  if(!n){ toast('Skriv navnet ditt først'); $(inputId).focus(); return null; }
+  store.set(K_NAME, n); return n;
+}
+function showStart(code){
+  const n = savedName();
+  $('#nameH').value = n; $('#nameJ').value = n;
+  $('#joinCard').hidden = !code; $('#joinCard').classList.toggle('joinhi', !!code);
+  if(code){ $('#joinCodeLbl').textContent = code; $('#codeIn').value = code; }
+}
+let joinTarget = '';
+function joinFromStart(code, inputId){
+  code = String(code || '').trim().toUpperCase();
+  if(code.length !== 5) return toast('Romkoden har 5 tegn');
+  const name = readName(inputId); if(!name) return;
+  clientStart(code, uid(), name, false);
+}
+$('#hostBtn').onclick = () => { const n = readName('#nameH'); if(n && peerReady()) hostCreate(n); };
+$('#nameH').addEventListener('keydown', e => { if(e.key === 'Enter') $('#hostBtn').click(); });
+$('#joinLinkBtn').onclick = () => joinFromStart(joinTarget, '#nameJ');
+$('#nameJ').addEventListener('keydown', e => { if(e.key === 'Enter') $('#joinLinkBtn').click(); });
+$('#joinBtn').onclick = () => joinFromStart($('#codeIn').value, $('#nameH').value.trim() ? '#nameH' : '#nameJ');
+$('#codeIn').addEventListener('keydown', e => { if(e.key === 'Enter') $('#joinBtn').click(); });
+$('#homeBtn').onclick = () => {
+  const msg = H.on ? 'Du er vert. Hvis du går, stenger rommet for alle. Forlate rommet?' : 'Forlate rommet?';
+  if(confirm(msg)) leaveRoom();
+};
+$('#helpBtn').onclick = () => openModal(`<h2>Samme Tanke</h2>
+  <p><b>Svar det du tror de andre svarer. Jo flere som tenker som deg, desto flere poeng får du.</b></p>
+  <p>Hver runde har alle 20 sekunder på å skrive og låse ett kort svar. Store og små bokstaver, ekstra mellomrom og tegnsetting på slutten teller ikke – «Kaffe!» og «kaffe» er det samme.</p>
+  <p>Du får ett poeng for hver annen spiller som svarte det samme som deg. Svarte alle likt, er det <b>full klaff</b> og ett ekstra poeng til alle.</p>
+  <p>Ellers kommer <b>Tenk én gang til</b>: alle svarene vises som knapper, og du har ti sekunder på å velge i hemmelighet. Velger alle det samme, får alle ett bonuspoeng.</p>
+  <p class="small">Etter fem runder vinner den med flest poeng. Verten styrer tempoet mellom rundene.</p>
+  <div class="btns"><button class="btn" onclick="closeModal()">Skjønner!</button></div>`);
+
+function boot(){
+  const h = location.hash.slice(1), m = /^rom=([A-Za-z0-9]{5})$/.exec(h);
+  const code = m ? m[1].toUpperCase() : '';
+  const ses = sess.get(K_SESSION, null);
+  joinTarget = code;
+  showStart(code);
+  if(ses && ses.code && (!code || ses.code === code)){
+    const saved = ses.host ? sess.get(K_HOST, null) : null;
+    if(ses.host && saved && saved.code === ses.code){ if(peerReady()) hostResume(saved); return; }
+    if(!ses.host){ if(peerReady()) clientStart(ses.code, ses.pid, ses.name, true); return; }
+  }
+  if(code) setTimeout(() => { const i = $('#nameJ'); if(!i.value) i.focus(); }, 100);
+}
+document.addEventListener('DOMContentLoaded', boot);
+</script>
+</body>
+</html>

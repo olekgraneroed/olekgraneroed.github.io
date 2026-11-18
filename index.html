@@ -1,10 +1,40 @@
-<html>
-
+<!doctype html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OleK – spill</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f7f7f5;--panel:#fff;--text:#1d1d1f;--muted:#6b6b70;--line:#d4d4d8;--correct:#3a9d5d;--accent:#2f6fde}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#121214;--panel:#1c1c1f;--text:#f2f2f3;--muted:#9a9aa2;--line:#33333a;--correct:#3f9e5f;--accent:#5b8ff0}}
+:root[data-theme="dark"]{--bg:#121214;--panel:#1c1c1f;--text:#f2f2f3;--muted:#9a9aa2;--line:#33333a;--correct:#3f9e5f;--accent:#5b8ff0}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:640px;margin:0 auto;padding:24px 16px 40px;display:flex;flex-direction:column;gap:14px}
+h1{margin:0;font-size:2rem;letter-spacing:.04em}
+.lead{margin:0 0 6px;color:var(--muted)}
+a.game{display:block;text-decoration:none;color:inherit;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;transition:transform .1s,border-color .1s}
+a.game:hover{border-color:var(--accent);transform:translateY(-1px)}
+a.game h2{margin:0 0 4px;font-size:1.3rem;letter-spacing:.05em;font-weight:800}
+a.game h2 span{color:var(--correct)}
+a.game p{margin:0;color:var(--muted);line-height:1.4}
+img{max-width:180px;align-self:center;margin-top:10px}
+</style>
+</head>
 <body>
+<main>
   <h1>OleK</h1>
-  <p>Welcome to my website!</p>
-  <p><a href="wordle/">Spill Ordle – norsk Wordle</a></p>
-  <img src="https://content.codecademy.com/articles/github-pages-via-web-app/happy-ice-cream.gif" />
+  <p class="lead">Welcome to my website! Velg et spill:</p>
+  <a class="game" href="sammetanke/">
+    <h2 style="font-family:Fredoka,system-ui,sans-serif;font-weight:700;letter-spacing:.01em">Samme <span style="color:#6c4cf1">Tanke</span></h2>
+    <p>Svar det du tror de andre svarer. Jo flere som tenker som deg, desto flere poeng får du. 2–8 venner, fem korte runder.</p>
+  </a>
+  <a class="game" href="wordle/">
+    <h2>ORD<span>LE</span></h2>
+    <p>Norsk Wordle – spill alene, flere på samme enhet eller online med venner.</p>
+  </a>
+  <img src="https://content.codecademy.com/articles/github-pages-via-web-app/happy-ice-cream.gif" alt="">
+</main>
 </body>
-
 </html>
